@@ -4,7 +4,7 @@ require('dotenv').config();
 
 class TwitterClient {
   private client: TwitterApi['readOnly']['v2'];
-  public timeLineMaxResults: number;
+  private timeLineMaxResults: number;
   constructor(timeLineMaxResults?: number) {
     this.client = new TwitterApi({
       appKey: process.env.TWITTER_CONSUMER_KEY,
@@ -47,4 +47,4 @@ class TwitterClient {
     return timeLine;
   }
 }
-module.exports = new TwitterClient(5).getTimeLine;
+module.exports = new TwitterClient(10).getTimeLine;
