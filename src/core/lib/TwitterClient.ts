@@ -4,15 +4,13 @@ require('dotenv').config();
 
 class TwitterClient {
   private client: TwitterApi['readOnly']['v2'];
-  private timeLineMaxResults: number;
-  constructor(timeLineMaxResults?: number) {
+  constructor(private timeLineMaxResults = 5) {
     this.client = new TwitterApi({
       appKey: process.env.TWITTER_CONSUMER_KEY,
       appSecret: process.env.TWITTER_CONSUMER_SECRET,
       accessToken: process.env.TWITTER_ACCESS_TOKEN_KEY,
       accessSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
     }).readOnly.v2;
-    this.timeLineMaxResults = timeLineMaxResults || 5;
   }
   // UsernameからTimeLineを取得する
   private async _getTimeLineFromUserId(userId: string) {
