@@ -36,7 +36,8 @@ const _createDynamicParams = (
   };
   return dynamicParams;
 };
-// mp3ファイルのURLを取得する
+// 文章を音声化する(mp3化)
+// mp3ファイルのURLを返却する
 export const getTweetVoice = async (
   targetText: string,
   isTranslate: boolean,
