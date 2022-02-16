@@ -9,25 +9,42 @@ const staticParams = {
   TextType: 'text',
   SampleRate: process.env.TWEETVOICE_SAMPLERATE,
 };
+
 const _createDynamicParams = (
   targetText: string,
   isTranslate: boolean,
   isMale: boolean,
+  tweetLang: string,
 ) => {
-  const voiceId: string = process.env.TWEETVOICE_GENERATE_JA_MALE_VOICE_ID;
-  const languageCode: string = process.env.TWEETVOICE_DEFAULT_LANG;
-  // 一旦無効化
-  // if (isTranslate) {
-  //   if (isMale) {
-  //     voiceId = process.env.TWEETVOICE_GENERATE_EN_MALE_VOICE_ID;
-  //   } else {
-  //     voiceId = process.env.TWEETVOICE_GENERATE_EN_FEMALE_VOICE_ID;
-  //   }
-  // } else {
-  //   if (!isMale) {
-  //     voiceId = process.env.TWEETVOICE_GENERATE_JA_FEMALE_VOICE_ID;
-  //   }
-  // }
+  const languageCode: string =
+    tweetLang === process.env.TWEETVOICE_DEFAULT_LANG
+      ? process.env.TWEETVOICE_DEFAULT_LANG
+      : process.env.TWEETVOICE_TRANSLATE_EN_LANG;
+
+  const choiseVoiceId = (languageCode) => {
+    // 単体テスト可能なように関数で切り出す
+    // ツイート文章が英語で男性であれば、米国ー男性の声を選択。女性であれば、米国ー女性。
+    // 日本語で、女性であれば、日本ー女性の声を選択
+    let voiceId = null;
+    if (languageCode === process.env.TWEETVOICE_TRANSLATE_EN_LANG) {
+      if (isMale) {
+        voiceId = process.env.TWEETVOICE_GENERATE_EN_MALE_VOICE_ID;
+      } else {
+        voiceId = process.env.TWEETVOICE_GENERATE_EN_FEMALE_VOICE_ID;
+      }
+    } else {
+      if (!isMale) {
+        // 現状では「日本語だったら」
+        voiceId = process.env.TWEETVOICE_GENERATE_JA_FEMALE_VOICE_ID;
+      }
+    }
+    return voiceId;
+  };
+
+  const voiceId =
+    choiseVoiceId(languageCode) ||
+    process.env.TWEETVOICE_GENERATE_JA_MALE_VOICE_ID; // choiseVoiceId()で該当しなければ、デフォルト
+
   const dynamicParams = {
     VoiceId: voiceId,
     SampleRate: process.env.TWEETVOICE_SAMPLERATE,
@@ -42,12 +59,18 @@ export const getTweetVoice = async (
   targetText: string,
   isTranslate: boolean,
   isMale: boolean,
+  tweetLang: string,
 ) => {
   try {
     if (!targetText) {
       throw new Error('音声化対象文章を入力してください');
     }
-    const dynamicParams = _createDynamicParams(targetText, false, false);
+    const dynamicParams = _createDynamicParams(
+      targetText,
+      isTranslate,
+      isMale,
+      tweetLang,
+    );
     const params = { ...staticParams, ...dynamicParams };
     const data = await pollyClient.send(
       new StartSpeechSynthesisTaskCommand(params),
