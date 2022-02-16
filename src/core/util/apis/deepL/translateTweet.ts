@@ -5,7 +5,7 @@ require('dotenv').config();
 
 // 対象のテキストを日本語に翻訳する
 // sourceの言語はdeepLが自動で識別する
-export const translateText = async (targetText: string) => {
+export const translateTeet = async (targetText: string): Promise<string> => {
   if (!targetText) {
     throw new Error('翻訳対象文章を入力してください');
   }
