@@ -1,8 +1,5 @@
 import { TweetV2 } from 'twitter-api-v2/dist/types/v2/tweet.definition.v2';
-import { getTweetVoice } from '../util/apis/aws/polly/getTweetVoice';
-import { translateTeet } from '../util/apis/deepL/translateTweet';
-import { detectionLanguage } from '../util/apis/detectionLanguage/detectionLanguage';
-import { getTimeLine } from '../util/apis/twitter/getTimeline';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
 
@@ -36,9 +33,8 @@ export class TextToVoice {
 
   async run(username: string, options: Toptions) {
     // targetのユーザーのタイムラインを取得
-    const timeline = await this.getTimeLine(username, 5); // 適当な関数で良い
+    const timeline = await this.getTimeLine(username, 5);
     const tweetObjWithVoice = await timeline.map(async (tweet) => {
-      console.log('tweet', tweet);
       // ツイート分以下ループ
       let voiceTarget = tweet.text;
       let tweetLang = process.env.TWEETVOICE_DEFAULT_LANG;
@@ -50,7 +46,6 @@ export class TextToVoice {
         // 日本語以外のツイートの場合、英語での発音とする
         // 翻訳する場合、日本語とする
         tweetLang = await this.detectionLanguage(tweet.text);
-        console.log('tweetLang', tweetLang);
       }
       const voiceUrl = await this.getTweetVoice(
         voiceTarget,
@@ -63,25 +58,9 @@ export class TextToVoice {
         tweetText: tweet.text,
         createdAt: tweet.created_at,
         voiceUrl: voiceUrl,
-        // voiceUrl: 'test',
       };
       return retObj;
     });
     return tweetObjWithVoice;
   }
 }
-
-const textToVoice = new TextToVoice(
-  getTweetVoice,
-  translateTeet,
-  detectionLanguage,
-  getTimeLine,
-);
-//
-textToVoice
-  .run('tweettestaccou4', { isTranslate: false, isMale: true })
-  .then((res) => {
-    res.map((response) => {
-      response.then((secondRes) => console.log(secondRes));
-    });
-  });
