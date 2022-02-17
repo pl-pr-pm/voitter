@@ -23,6 +23,12 @@ type Toptions = {
   isTranslate: boolean;
   isMale: boolean;
 };
+
+type TretArray = {
+  tweetText: string;
+  createdAt: string;
+  voiceUrl: string;
+};
 export class TextToVoice {
   constructor(
     private getTweetVoice: TgetTweetVoice,
@@ -30,14 +36,11 @@ export class TextToVoice {
     private detectionLanguage: TdetectionLanguage,
     private getTimeLine: TgetTimeLine,
   ) {}
-
-  async run(username: string, options: Toptions) {
-    // targetのユーザーのタイムラインを取得
-    const timeline = await this.getTimeLine(username, 5);
-    const tweetObjWithVoice = await timeline.map(async (tweet) => {
-      // ツイート分以下ループ
-      let voiceTarget = tweet.text;
-      let tweetLang = process.env.TWEETVOICE_DEFAULT_LANG;
+  // ツイートのオブジェクトを受け取り、音声ファイルを格納したs3のURLを追加し、返却する
+  textToVoiceObj = async (tweet: TweetV2, options: Toptions) => {
+    let voiceTarget = tweet.text;
+    let tweetLang = process.env.TWEETVOICE_DEFAULT_LANG;
+    try {
       if (options.isTranslate) {
         voiceTarget = await this.translateTweet(tweet.text);
       } else {
@@ -60,7 +63,26 @@ export class TextToVoice {
         voiceUrl: voiceUrl,
       };
       return retObj;
-    });
-    return tweetObjWithVoice;
+    } catch (e) {
+      console.log(`Error発生しました${e.toString()}`);
+      return;
+    }
+  };
+
+  async run(username: string, options: Toptions) {
+    // targetのユーザーのタイムライン(音声化済み)を取得
+    const retArray: TretArray[] = [];
+
+    try {
+      const timeline = await this.getTimeLine(username, 5);
+      for (const tweet of timeline) {
+        retArray.push(await this.textToVoiceObj(tweet, options));
+      }
+      return retArray;
+    } catch (e) {
+      throw new Error(
+        `対象のユーザーのタイムラインの取得及び音声化に失敗しました ${e.toString()}`,
+      );
+    }
   }
 }
