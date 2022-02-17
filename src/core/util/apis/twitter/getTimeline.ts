@@ -16,7 +16,7 @@ const _getTimeLineFromUserId = async (
     });
     return userTimeline.data;
   } catch (e) {
-    throw new Error('timeineの取得に失敗しました');
+    throw new Error(`timeineの取得に失敗しました  ${e.toString()}`);
   }
 };
 // UsernameからUserIdを取得する
@@ -28,7 +28,7 @@ const _getUserIdFromUserName = async (username: string) => {
     const res = await client.userByUsername(username);
     return res.data.id;
   } catch (e) {
-    throw new Error('useridの取得に失敗しました');
+    throw new Error(`useridの取得に失敗しました ${e.toString()}`);
   }
 };
 

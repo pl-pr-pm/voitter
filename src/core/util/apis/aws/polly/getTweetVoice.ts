@@ -63,7 +63,7 @@ export const getTweetVoice = async (
 ) => {
   try {
     if (!targetText) {
-      throw new Error('音声化対象文章を入力してください');
+      throw new Error(`音声化対象文章を入力してください`);
     }
     const dynamicParams = _createDynamicParams(
       targetText,
@@ -77,6 +77,6 @@ export const getTweetVoice = async (
     );
     return data.SynthesisTask.OutputUri;
   } catch (err) {
-    throw new Error('音声が生成できませんでした');
+    throw new Error(`音声が生成できませんでした ${err.toString()}`);
   }
 };

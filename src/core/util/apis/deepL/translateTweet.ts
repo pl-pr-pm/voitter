@@ -16,6 +16,6 @@ export const translateTeet = async (targetText: string): Promise<string> => {
     return response.data.translations[0].text;
   } catch (e) {
     console.log(e.toString());
-    throw new Error('翻訳に失敗しました');
+    throw new Error(`翻訳に失敗しました ${e.toString()}`);
   }
 };

@@ -6,7 +6,9 @@ export const detectionLanguage = async (
   targetText: string,
 ): Promise<string> => {
   if (!targetText) {
-    throw new Error('言語検出対象文章を入力してください');
+    throw new Error(
+      `言語検出対象文章を入力してください targetText is ${targetText}`,
+    );
   }
   try {
     const response = await client.detect(targetText);
@@ -25,6 +27,6 @@ export const detectionLanguage = async (
     return detectionLang;
   } catch (e) {
     console.log(e.toString());
-    throw new Error('言語の検出ができませんでした');
+    throw new Error(`言語の検出ができませんでした ${e.toString()}`);
   }
 };
