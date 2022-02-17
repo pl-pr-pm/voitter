@@ -1,3 +1,4 @@
+import { Logger, Injectable } from '@nestjs/common';
 import { TweetV2 } from 'twitter-api-v2/dist/types/v2/tweet.definition.v2';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -29,12 +30,15 @@ type TretArray = {
   createdAt: string;
   voiceUrl: string;
 };
+
+@Injectable()
 export class TextToVoice {
   constructor(
     private getTweetVoice: TgetTweetVoice,
     private translateTweet: TtranslateTweet,
     private detectionLanguage: TdetectionLanguage,
     private getTimeLine: TgetTimeLine,
+    private readonly logger = new Logger(TextToVoice.name),
   ) {}
   // ツイートのオブジェクトを受け取り、音声ファイルを格納したs3のURLを追加し、返却する
   textToVoiceObj = async (tweet: TweetV2, options: Toptions) => {
@@ -64,7 +68,7 @@ export class TextToVoice {
       };
       return retObj;
     } catch (e) {
-      console.log(`Error発生しました${e.toString()}`);
+      this.logger.error(`Error発生しました ${e.toString()}`);
       return;
     }
   };
