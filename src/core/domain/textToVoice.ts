@@ -1,36 +1,16 @@
 import { Logger, Injectable } from '@nestjs/common';
 import { TweetV2 } from 'twitter-api-v2/dist/types/v2/tweet.definition.v2';
+import {
+  TgetTimeLine,
+  TtranslateTweet,
+  TdetectionLanguage,
+  TgetTweetVoice,
+  Toptions,
+  TretArray,
+} from './type/type';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
-
-type TgetTweetVoice = (
-  targetText: string,
-  isTranslate: boolean,
-  isMale: boolean,
-  tweetLang: string,
-) => Promise<string>;
-
-type TtranslateTweet = (targetText: string) => Promise<string>;
-
-type TdetectionLanguage = (targetText: string) => Promise<string>;
-
-type TgetTimeLine = (
-  username: string,
-  timeLineMaxResults: number,
-) => Promise<TweetV2[]>;
-
-type Toptions = {
-  isTranslate: boolean;
-  isMale: boolean;
-};
-
-type TretArray = {
-  tweetText: string;
-  createdAt: string;
-  voiceUrl: string;
-};
-
 @Injectable()
 export class TextToVoice {
   constructor(
