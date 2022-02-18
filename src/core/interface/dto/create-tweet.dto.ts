@@ -5,6 +5,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { TretArray, TbothRetArray } from '../../domain/type/type';
 
 export class CreateTweetDto {
   // twitterの仕様上usernameは、4文字以上50文字以下となる
@@ -15,8 +16,7 @@ export class CreateTweetDto {
   username: string;
 
   @IsNotEmpty()
-  @IsString()
-  text: string;
+  tweetContent: TretArray | TbothRetArray;
 
   @IsNotEmpty()
   @IsString()
