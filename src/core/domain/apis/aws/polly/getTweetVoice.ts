@@ -17,7 +17,7 @@ const _createDynamicParams = (
   tweetLang: string,
 ) => {
   const languageCode: string =
-    tweetLang === process.env.TWEETVOICE_DEFAULT_LANG
+    tweetLang === process.env.DETECTION_NATIVE_LANGUAGE
       ? process.env.TWEETVOICE_DEFAULT_LANG
       : process.env.TWEETVOICE_TRANSLATE_EN_LANG;
 
@@ -25,7 +25,7 @@ const _createDynamicParams = (
     // 単体テスト可能なように関数で切り出す
     // ツイート文章が英語で男性であれば、米国ー男性の声を選択。女性であれば、米国ー女性。
     // 日本語で、女性であれば、日本ー女性の声を選択
-    let voiceId = null;
+    let voiceId = process.env.TWEETVOICE_GENERATE_JA_MALE_VOICE_ID;
     if (languageCode === process.env.TWEETVOICE_TRANSLATE_EN_LANG) {
       if (isMale) {
         voiceId = process.env.TWEETVOICE_GENERATE_EN_MALE_VOICE_ID;
@@ -41,9 +41,7 @@ const _createDynamicParams = (
     return voiceId;
   };
 
-  const voiceId =
-    choiseVoiceId(languageCode) ||
-    process.env.TWEETVOICE_GENERATE_JA_MALE_VOICE_ID; // choiseVoiceId()で該当しなければ、デフォルト
+  const voiceId = choiseVoiceId(languageCode);
 
   const dynamicParams = {
     VoiceId: voiceId,
