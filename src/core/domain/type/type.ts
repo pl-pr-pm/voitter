@@ -19,10 +19,18 @@ export type TgetTimeLine = (
 export type Toptions = {
   isTranslate: boolean;
   isMale: boolean;
+  isBoth: boolean;
 };
 
 export type TretArray = {
   tweetText: string;
   createdAt: string;
   voiceUrl: string;
+};
+
+export type TbothRetArray = {
+  tweetText: string;
+  createdAt: string;
+  maleVoiceUrl: string;
+  femaleVoiceUrl: string;
 };
