@@ -7,10 +7,9 @@ import {
   TgetTweetVoice,
   Toptions,
   TretArray,
+  TbothRetArray,
 } from './type/type';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config();
 @Injectable()
 export class TextToVoice {
   constructor(
@@ -34,19 +33,43 @@ export class TextToVoice {
         // 翻訳する場合、日本語とする
         tweetLang = await this.detectionLanguage(tweet.text);
       }
-      const voiceUrl = await this.getTweetVoice(
-        voiceTarget,
-        options.isTranslate,
-        options.isMale,
-        tweetLang,
-      );
-
-      const retObj = {
-        tweetText: tweet.text,
-        createdAt: tweet.created_at,
-        voiceUrl: voiceUrl,
-      };
-      return retObj;
+      // 男性・女性 両方の声で音声を生成する場合
+      if (options.isBoth) {
+        const [maleVoiceUrl, femaleVoiceUrl] = await Promise.all([
+          this.getTweetVoice(
+            voiceTarget,
+            options.isTranslate,
+            (options.isMale = true),
+            tweetLang,
+          ),
+          this.getTweetVoice(
+            voiceTarget,
+            options.isTranslate,
+            (options.isMale = false),
+            tweetLang,
+          ),
+        ]);
+        const retObj = {
+          tweetText: tweet.text,
+          createdAt: tweet.created_at,
+          maleVoiceUrl: maleVoiceUrl,
+          femaleVoiceUrl: femaleVoiceUrl,
+        };
+        return retObj;
+      } else {
+        const voiceUrl = await this.getTweetVoice(
+          voiceTarget,
+          options.isTranslate,
+          options.isMale,
+          tweetLang,
+        );
+        const retObj = {
+          tweetText: tweet.text,
+          createdAt: tweet.created_at,
+          voiceUrl: voiceUrl,
+        };
+        return retObj;
+      }
     } catch (e) {
       this.logger.error(`Error発生しました ${e.toString()}`);
       return;
@@ -55,7 +78,7 @@ export class TextToVoice {
 
   async run(username: string, options: Toptions) {
     // targetのユーザーのタイムライン(音声化済み)を取得
-    const retArray: TretArray[] = [];
+    const retArray: (TretArray | TbothRetArray)[] = []; //複数の型を持つ配列の定義方法（ハマる〜）
 
     try {
       const timeline = await this.getTimeLine(username, 5);
