@@ -28,18 +28,18 @@ export class TweetRepository {
     this.tweetModel.bulkWrite(tweetArray); // DBに登録したデータはレスポンス速度を速めるため返却しない。DBとクライアントとで整合性がなくても問題ない。
   }
 
-  // 対象usernameのタイムラインを全件取得
-  async findByUsername(selectTweetDto: SelectTweetDto): Promise<Tweet[]> {
-    const { username } = selectTweetDto;
-    const docs = await this.tweetModel.find({ username: username });
-    // return docs.map((doc) => doc.tweetCreatedAt).sort();
-    // sort()する
+  // 対象のタイムラインを取得
+  async findByOptions(
+    filter: any,
+    projection: string,
+    options: any,
+  ): Promise<Tweet[]> {
+    const docs = await this.tweetModel.find(filter, projection, options);
     return docs;
   }
 
-  // 対象のusernameのタイムラインを全件削除
-  async deleteByUsername(selectTweetDto: SelectTweetDto): Promise<void> {
-    // const { username } = selectTweetDto;
-    // this.tweetModel.deleteMany()
+  // 対象のタイムラインを削除
+  async deleteByOptions(options): Promise<void> {
+    this.tweetModel.deleteMany(options);
   }
 }

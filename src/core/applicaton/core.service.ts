@@ -10,9 +10,8 @@ export class CoreService {
     private textToVoice: TextToVoice,
   ) {}
 
-  async _createTweet(username: string, options: Toptions) {
+  async _createTweet(username: string, now: string, options: Toptions) {
     const query = [];
-    const now = new Date().toISOString();
     const tweets = await this.textToVoice.run(username, options);
     for (const tweet of tweets) {
       query.push({
@@ -28,23 +27,74 @@ export class CoreService {
       });
     }
     this.tweetRepository.createBulkTweet(query);
-    return tweets;
+    // データを新規作成・DBへの格納後のデータを返却するのではなく、DB格納前にデータを返却するので、DBから取得した際のデータ構造と合わせる
+    const retTweets = {
+      username: username,
+      tweetContent: tweets,
+    };
+
+    return retTweets;
   }
 
-  async _selectTweet(selectTweetDto: SelectTweetDto) {
-    return await this.tweetRepository.findByUsername(selectTweetDto);
+  // 引数によって動的に取得内容を決定する
+  // filter: filter要素
+  // projections: 取得したい要素
+  // sortCondition: sortの条件
+  // limitNum: limit件数
+  async _selectTweet(
+    filter: any,
+    projections: any,
+    sortCondition: any,
+    limitNum: number,
+  ) {
+    return await this.tweetRepository.findByOptions(filter, projections, {
+      sort: sortCondition,
+      limit: limitNum,
+    });
+  }
+
+  async _deleteTimeLine(selectTweetDto: SelectTweetDto): Promise<void> {
+    await this.tweetRepository.deleteByOptions(selectTweetDto);
+    return;
   }
 
   async selectTimeLine(selectTweetDto: SelectTweetDto, options: Toptions) {
     const { username } = selectTweetDto;
-    const timelines = await this._selectTweet({ username: username });
+    const now = new Date().toISOString();
+    // 後続処理の判定のため、対象ユーザーのデータを一件取得する
+    const timelines = await this._selectTweet(
+      { username: username },
+      'createdAt',
+      { createdAt: 'desc' },
+      1,
+    );
+    // タイムライン情報が取得できなかった場合
     if (!timelines) {
-      this._createTweet(username, options);
-    } else if (timelines[0].createdAt) {
+      // タイムライン情報を作成する
+      const timelines = await this._createTweet(username, now, options);
+      return timelines;
+      // タイムライン情報が取得できたが、リクエスト処理日とDBへのタイムライン情報登録日に差がない場合、
+      // DBからデータを取得し、リターンする
+    } else if (
+      timelines &&
+      timelines[0]?.createdAt.substring(0, 10) === now.substring(0, 10)
+    ) {
+      const timelines = await this._selectTweet(
+        { username: username },
+        'username tweetContent tweetCreatedAt',
+        { tweetCreatedAt: 'desc' },
+        100,
+      );
+      return timelines;
+      // リクエスト処理日とDBへのタイムライン情報登録日に差がある場合、タイムライン情報を新規作成し、リターンする
+    } else if (
+      timelines &&
+      timelines[0]?.createdAt.substring(0, 10) !== now.substring(0, 10)
+    ) {
+      console.log('else');
+      await this._deleteTimeLine(selectTweetDto);
+      const timelines = await this._createTweet(username, now, options);
+      return timelines;
     }
-  }
-
-  async deleteTimeLine(selectTweetDto: SelectTweetDto): Promise<void> {
-    const { username } = selectTweetDto;
   }
 }
