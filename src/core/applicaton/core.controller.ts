@@ -5,26 +5,32 @@ import {
   Get,
   Post,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { CoreService } from '../domain/core.service';
-import { Toptions } from '../domain/type/type';
-import { Request } from 'express';
 import { CreateTimelineDto } from '../interface/dto/create-timeline.dto';
 import { JwtAuthGuard } from '../../auth/domain/guards/jwt-auth.guard';
+import { Role } from 'src/auth/domain/decorators/role.decorator';
+import { UserStatus } from 'src/auth/domain/enum/user-status';
+import { RolesGuard } from 'src/auth/domain/guards/roles.guard';
 
 @Controller('timeline')
 export class CoreController {
   constructor(readonly coreService: CoreService) {}
   @Get()
-  async selectTimeline(
-    @Query('username') username: string,
-    @Query('isTranslate') isTranslate: boolean,
-  ) {
+  async selectTimeline(@Query('username') username: string) {
     return await this.coreService.selectTimeLine(
       { username: username },
-      { isTranslate: isTranslate, isMale: true, isBoth: false },
+      { isTranslate: false, isMale: true, isBoth: false },
+    );
+  }
+  // 翻訳されたタイムラインの取得は、ログインしている必要がある
+  @Get('/translate')
+  @UseGuards(JwtAuthGuard)
+  async selectTranslateTimeline(@Query('username') username: string) {
+    return await this.coreService.selectTimeLine(
+      { username: username },
+      { isTranslate: true, isMale: true, isBoth: false },
     );
   }
 
@@ -33,7 +39,8 @@ export class CoreController {
   // フロントからリクエストが行われる、'/timeline @GET' と同様のインターフェースの方が良いかと思ったが、
   // リソース作成用のエンドポイントなので、GETではなくPOSTとしている
   @Post('/internal')
-  @UseGuards(JwtAuthGuard)
+  @Role(UserStatus.SYSTEM)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async createTimeline(@Body() createTimelineDto: CreateTimelineDto) {
     const { username, isTranslate } = createTimelineDto;
     const now = new Date().toISOString();
@@ -46,7 +53,8 @@ export class CoreController {
 
   // ハウスキーピング用
   @Delete('/internal')
-  @UseGuards(JwtAuthGuard)
+  @Role(UserStatus.SYSTEM)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async deleteTimeline(@Query('username') username: string) {
     return await this.coreService._deleteTimeLine({ username: username });
   }
