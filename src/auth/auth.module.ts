@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
+import { AuthController } from './application/auth.controller';
 import { AuthService } from './domain/auth.service';
 import { UserRepository } from './infrastracture/repository/auth.repository';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -8,6 +8,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './domain/jwt.strategy';
 import { JwtAuthGuard } from './domain/guards/jwt-auth.guard';
+import { RolesGuard } from './domain/guards/roles.guard';
 
 @Module({
   imports: [
@@ -21,7 +22,13 @@ import { JwtAuthGuard } from './domain/guards/jwt-auth.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserRepository, JwtStrategy, JwtAuthGuard],
-  exports: [JwtStrategy, JwtAuthGuard], // core moduleでも利用のため
+  providers: [
+    AuthService,
+    UserRepository,
+    JwtStrategy,
+    JwtAuthGuard,
+    RolesGuard,
+  ],
+  exports: [JwtStrategy, JwtAuthGuard, RolesGuard], // core moduleでも利用のため
 })
 export class AuthModule {}

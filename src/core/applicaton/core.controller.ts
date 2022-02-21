@@ -8,11 +8,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { Cookies } from './customeDecorator/cookieParser';
-import { CoreService } from '../applicaton/core.service';
+import { CoreService } from '../domain/core.service';
 import { Toptions } from '../domain/type/type';
 import { Request } from 'express';
-import { CreateTimelineDto } from './dto/create-timeline.dto';
+import { CreateTimelineDto } from '../interface/dto/create-timeline.dto';
 import { JwtAuthGuard } from '../../auth/domain/guards/jwt-auth.guard';
 
 @Controller('timeline')

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { TextToVoice } from '../domain/textToVoice';
+import { TextToVoice } from './textToVoice';
 import { TweetRepository } from '../infrastracture/repository/tweet.repository';
 import { SelectTweetDto } from '../interface/dto/select-tweet.dto';
-import { Toptions } from '../domain/type/type';
+import { Toptions } from './type/type';
 @Injectable()
 export class CoreService {
   constructor(

@@ -1,8 +1,8 @@
 import { MongooseModule } from '@nestjs/mongoose';
 import { Tweet, TweetSchema } from './infrastracture/scheme/tweet.scheme';
 import { Module } from '@nestjs/common';
-import { CoreController } from './interface/core.controller';
-import { CoreService } from './applicaton/core.service';
+import { CoreController } from './applicaton/core.controller';
+import { CoreService } from './domain/core.service';
 import { TweetRepository } from './infrastracture/repository/tweet.repository';
 import { GetTweetVoice } from './domain/apis/aws/polly/getTweetVoice';
 import { TranslateTweet } from './domain/apis/deepL/translateTweet';
