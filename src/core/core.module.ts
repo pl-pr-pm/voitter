@@ -9,10 +9,12 @@ import { TranslateTweet } from './domain/apis/deepL/translateTweet';
 import { DetectionLanguage } from './domain/apis/detectionLanguage/detectionLanguage';
 import { GetTimeLine } from './domain/apis/twitter/getTimeline';
 import { TextToVoice } from './domain/textToVoice';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Tweet.name, schema: TweetSchema }]),
+    AuthModule, // クラスをそれぞれインポートするのではなく、Moduleをインポートすることで、そのModuleでエクスポートしているクラスにのみアクセスできるようになる
   ],
   controllers: [CoreController],
   providers: [

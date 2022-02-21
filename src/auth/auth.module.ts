@@ -6,6 +6,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './infrastracture/shema/user-schema';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './domain/jwt.strategy';
+import { JwtAuthGuard } from './domain/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserRepository],
+  providers: [AuthService, UserRepository, JwtStrategy, JwtAuthGuard],
+  exports: [JwtStrategy, JwtAuthGuard], // core moduleでも利用のため
 })
 export class AuthModule {}

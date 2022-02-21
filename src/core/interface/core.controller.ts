@@ -6,12 +6,14 @@ import {
   Post,
   Query,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { Cookies } from './customeDecorator/cookieParser';
 import { CoreService } from '../applicaton/core.service';
 import { Toptions } from '../domain/type/type';
 import { Request } from 'express';
 import { CreateTimelineDto } from './dto/create-timeline.dto';
+import { JwtAuthGuard } from '../../auth/domain/guards/jwt-auth.guard';
 
 @Controller('timeline')
 export class CoreController {
@@ -32,6 +34,7 @@ export class CoreController {
   // フロントからリクエストが行われる、'/timeline @GET' と同様のインターフェースの方が良いかと思ったが、
   // リソース作成用のエンドポイントなので、GETではなくPOSTとしている
   @Post('/internal')
+  @UseGuards(JwtAuthGuard)
   async createTimeline(@Body() createTimelineDto: CreateTimelineDto) {
     const { username, isTranslate } = createTimelineDto;
     const now = new Date().toISOString();
@@ -44,6 +47,7 @@ export class CoreController {
 
   // ハウスキーピング用
   @Delete('/internal')
+  @UseGuards(JwtAuthGuard)
   async deleteTimeline(@Query('username') username: string) {
     return await this.coreService._deleteTimeLine({ username: username });
   }

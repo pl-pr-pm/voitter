@@ -22,7 +22,7 @@ export class AuthService {
       null,
     );
     if (user && (await bcrypt.compare(password, user[0].password))) {
-      const payload = { id: user[0].createdAt, username: user[0].username };
+      const payload = { username: user[0].username };
       const accessToken = await this.jwtService.sign(payload); // 署名トークンの発行
       return { accessToken };
     }
