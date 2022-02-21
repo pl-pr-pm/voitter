@@ -1,9 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserRepository } from '../infrastracture/repository/auth.repository';
-import { CreateUserDto } from '../interface/dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { CredentialsDto } from '../interface/dto/credentials.dto';
 import * as bcrypt from 'bcrypt';
+import { UserStatus } from './enum/user-status';
 @Injectable()
 export class AuthService {
   constructor(
@@ -11,9 +11,21 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signUp(createUserDto: CreateUserDto) {
-    return await this.userRepository.createUser(createUserDto);
+  // ステータスの付与をユーザー/システムで混合しないようロジックを別にしている
+  async userSignUp(credentialsDto: CredentialsDto) {
+    return await this.userRepository.createUser({
+      ...credentialsDto,
+      status: UserStatus.MEMBERS,
+    });
   }
+
+  async systemSignUp(credentialsDto: CredentialsDto) {
+    return await this.userRepository.createUser({
+      ...credentialsDto,
+      status: UserStatus.SYSTEM,
+    });
+  }
+
   async signIn(credentialsDto: CredentialsDto) {
     const { username, password } = credentialsDto;
     const user = await this.userRepository.findByOptions(
