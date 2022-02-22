@@ -13,25 +13,29 @@ import { JwtAuthGuard } from '../../auth/domain/guards/jwt-auth.guard';
 import { Role } from 'src/auth/domain/decorators/role.decorator';
 import { UserStatus } from 'src/auth/domain/enum/user-status';
 import { RolesGuard } from 'src/auth/domain/guards/roles.guard';
+import { SelectTweetDto } from '../interface/dto/select-tweet.dto';
+import { QueryToDto } from '../interface/decorator/query-param.decorator';
 
 @Controller('timeline')
 export class CoreController {
   constructor(readonly coreService: CoreService) {}
   @Get()
-  async selectTimeline(@Query('username') username: string) {
-    return await this.coreService.selectTimeLine(
-      { username: username },
-      { isTranslate: false, isMale: true, isBoth: false },
-    );
+  async selectTimeline(@QueryToDto('username') selectTweetDto: SelectTweetDto) {
+    return await this.coreService.selectTimeLine(selectTweetDto, {
+      isTranslate: false,
+      isMale: true,
+      isBoth: false,
+    });
   }
   // 翻訳されたタイムラインの取得は、ログインしている必要がある
   @Get('/translate')
   @UseGuards(JwtAuthGuard)
-  async selectTranslateTimeline(@Query('username') username: string) {
-    return await this.coreService.selectTimeLine(
-      { username: username },
-      { isTranslate: true, isMale: true, isBoth: false },
-    );
+  async selectTranslateTimeline(@QueryToDto() selectTweetDto: SelectTweetDto) {
+    return await this.coreService.selectTimeLine(selectTweetDto, {
+      isTranslate: true,
+      isMale: true,
+      isBoth: false,
+    });
   }
 
   // バッチ用
