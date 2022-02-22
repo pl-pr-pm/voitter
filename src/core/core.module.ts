@@ -1,6 +1,6 @@
 import { MongooseModule } from '@nestjs/mongoose';
 import { Tweet, TweetSchema } from './infrastracture/scheme/tweet.scheme';
-import { Module } from '@nestjs/common';
+import { CacheModule, Module } from '@nestjs/common';
 import { CoreController } from './applicaton/core.controller';
 import { CoreService } from './domain/core.service';
 import { TweetRepository } from './infrastracture/repository/tweet.repository';
@@ -10,11 +10,13 @@ import { DetectionLanguage } from './domain/apis/detectionLanguage/detectionLang
 import { GetTimeLine } from './domain/apis/twitter/getTimeline';
 import { TextToVoice } from './domain/textToVoice';
 import { AuthModule } from 'src/auth/auth.module';
+import { CoreCache } from './infrastracture/cache/cache';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Tweet.name, schema: TweetSchema }]),
     AuthModule, // クラスをそれぞれインポートするのではなく、Moduleをインポートすることで、そのModuleでエクスポートしているクラスにのみアクセスできるようになる
+    CacheModule.register({ ttl: 60, max: 10 }),
   ],
   controllers: [CoreController],
   providers: [
@@ -25,6 +27,7 @@ import { AuthModule } from 'src/auth/auth.module';
     DetectionLanguage,
     TranslateTweet,
     TextToVoice,
+    CoreCache,
   ],
 })
 export class CoreModule {}
