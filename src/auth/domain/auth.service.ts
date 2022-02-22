@@ -33,10 +33,14 @@ export class AuthService {
       'createdAt username password',
       null,
     );
-    if (user && (await bcrypt.compare(password, user[0].password))) {
+    if (user.length === 0)
+      throw new UnauthorizedException(
+        'ユーザー名またはパスワードを確認してください',
+      );
+    if (user[0] && (await bcrypt.compare(password, user[0]?.password))) {
       const payload = { username: user[0].username };
-      const accessToken = await this.jwtService.sign(payload); // 署名トークンの発行
-      return { accessToken };
+      const jwtToken = await this.jwtService.sign(payload); // 署名トークンの発行
+      return `Authentication=${jwtToken}; HttpOnly; Max-Age=${process.env.JWT_EXPIRATION}; Path=/;`;
     }
     throw new UnauthorizedException(
       'ユーザー名またはパスワードを確認してください',
