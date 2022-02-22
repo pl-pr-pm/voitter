@@ -1,5 +1,10 @@
 import { StartSpeechSynthesisTaskCommand } from '@aws-sdk/client-polly';
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { pollyClient } from './libs/pollyClient';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
@@ -64,7 +69,7 @@ export class GetTweetVoice {
   ) => {
     try {
       if (!targetText) {
-        throw new Error(`音声化対象文章を入力してください`);
+        throw new BadRequestException(`音声化対象文章を入力してください`);
       }
       const dynamicParams = this._createDynamicParams(
         targetText,
@@ -78,7 +83,13 @@ export class GetTweetVoice {
       );
       return data.SynthesisTask.OutputUri;
     } catch (err) {
-      throw new Error(`音声が生成できませんでした ${err.toString()}`);
+      throw new HttpException(
+        {
+          statusCode: 512,
+          message: `音声の生成に失敗しました ${err.message()}`,
+        },
+        512,
+      );
     }
   };
 }

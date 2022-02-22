@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { client } from './libs/twitterClient';
 
 // UsernameからTimeLineを取得する
@@ -19,19 +19,31 @@ export class GetTimeLine {
       });
       return userTimeline.data;
     } catch (e) {
-      throw new Error(`timeineの取得に失敗しました  ${e.toString()}`);
+      throw new HttpException(
+        {
+          statusCode: 514,
+          message: `timelineの取得に失敗しました ${e.message()}`,
+        },
+        514,
+      );
     }
   };
   // UsernameからUserIdを取得する
   _getUserIdFromUserName = async (username: string) => {
     if (!username) {
-      throw new Error('usernameを入力してください');
+      throw new BadRequestException(`usernameを入力してください`);
     }
     try {
       const res = await client.userByUsername(username);
       return res.data.id;
     } catch (e) {
-      throw new Error(`useridの取得に失敗しました ${e.toString()}`);
+      throw new HttpException(
+        {
+          statusCode: 513,
+          message: `useridの取得に失敗しました ${e.message()}`,
+        },
+        513,
+      );
     }
   };
 

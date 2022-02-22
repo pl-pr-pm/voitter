@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import axios from 'axios';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -10,7 +10,7 @@ require('dotenv').config();
 export class TranslateTweet {
   translateTweet = async (targetText: string): Promise<string> => {
     if (!targetText) {
-      throw new Error('翻訳対象文章を入力してください');
+      throw new BadRequestException(`翻訳対象文章を入力してください`);
     }
     try {
       // ダサい。良い方法ないんだっけ・・・。FormData()だと、Bodyが指定された形式と異なってしまい、authkeyが正常に読み込めず403となった
@@ -18,8 +18,13 @@ export class TranslateTweet {
       const response = await axios.post(process.env.DEEPL_TRANSLATE_URL, body);
       return response.data.translations[0].text;
     } catch (e) {
-      console.log(e.toString());
-      throw new Error(`翻訳に失敗しました ${e.toString()}`);
+      throw new HttpException(
+        {
+          statusCode: 512,
+          message: `音声の生成に失敗しました ${e.message()}`,
+        },
+        512,
+      );
     }
   };
 }
