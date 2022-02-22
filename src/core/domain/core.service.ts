@@ -3,11 +3,13 @@ import { TextToVoice } from './textToVoice';
 import { TweetRepository } from '../infrastracture/repository/tweet.repository';
 import { SelectTweetDto } from '../interface/dto/select-tweet.dto';
 import { Toptions } from './type/type';
+import { CoreCache } from '../infrastracture/cache/cache';
 @Injectable()
 export class CoreService {
   constructor(
     private tweetRepository: TweetRepository,
     private textToVoice: TextToVoice,
+    private coreCache: CoreCache,
   ) {}
 
   // タイムライン除法を作成する
@@ -63,6 +65,10 @@ export class CoreService {
   // タイムライン情報を取得。存在しない場合は、新規作成しDBに登録する
   async selectTimeLine(selectTweetDto: SelectTweetDto, options: Toptions) {
     const { username } = selectTweetDto;
+    // usernameをキーとしたデータがキャッシュにあれば、キャッシュのデータを返却
+    const cacheResult = await this.coreCache.getCache(username);
+    if (cacheResult) return cacheResult;
+
     const now = new Date().toISOString();
     // 後続処理の判定のため、対象ユーザーのデータを一件取得する
     const timelines = await this._selectTweet(
@@ -77,6 +83,8 @@ export class CoreService {
     if (!timelines) {
       // タイムライン情報を作成する
       const timelines = await this._createTweet(username, now, options);
+      await this.coreCache.deleteCache(username);
+      await this.coreCache.setCache(username, timelines);
       return timelines;
       // タイムライン情報が取得できたが、リクエスト処理日とDBへのタイムライン情報登録日に差がない場合、
       // DBからデータを取得し、リターンする
@@ -90,6 +98,8 @@ export class CoreService {
         { tweetCreatedAt: 'desc' },
         parseInt(process.env.TWEET_MAX_RESULT),
       );
+      // キャッシュのttlが切れた場合なので、setCacheのみ実施
+      await this.coreCache.setCache(username, timelines);
       return timelines;
       // リクエスト処理日とDBへのタイムライン情報登録日に差がある場合、タイムライン情報を新規作成し、リターンする
     } else if (
@@ -98,6 +108,8 @@ export class CoreService {
     ) {
       await this._deleteTimeLine(selectTweetDto);
       const timelines = await this._createTweet(username, now, options);
+      await this.coreCache.deleteCache(username);
+      await this.coreCache.setCache(username, timelines);
       return timelines;
     }
   }
