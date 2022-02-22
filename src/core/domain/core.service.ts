@@ -88,7 +88,7 @@ export class CoreService {
         { username: username, isTranslate: options.isTranslate },
         'username tweetContent',
         { tweetCreatedAt: 'desc' },
-        100,
+        parseInt(process.env.TWEET_MAX_RESULT),
       );
       return timelines;
       // リクエスト処理日とDBへのタイムライン情報登録日に差がある場合、タイムライン情報を新規作成し、リターンする
