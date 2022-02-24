@@ -29,13 +29,19 @@ export class GetTimeLine {
     }
   };
   // UsernameからUserIdを取得する
-  _getUserIdFromUserName = async (username: string) => {
+  _getUserInfoFromUserName = async (username: string) => {
     if (!username) {
       throw new BadRequestException(`usernameを入力してください`);
     }
     try {
-      const res = await client.userByUsername(username);
-      return res.data.id;
+      const res = await client.userByUsername(username, {
+        'user.fields': 'description profile_image_url',
+      });
+      return {
+        userId: res.data.id,
+        description: res.data.description,
+        profile_image_url: res.data.profile_image_url,
+      };
     } catch (e) {
       throw new HttpException(
         {
@@ -48,11 +54,16 @@ export class GetTimeLine {
   };
 
   getTimeLine = async (username: string, timeLineMaxResults: number) => {
-    const userId = await this._getUserIdFromUserName(username);
+    const { userId, description, profile_image_url } =
+      await this._getUserInfoFromUserName(username);
     const timeLine = await this._getTimeLineFromUserId(
       userId,
       timeLineMaxResults,
     );
-    return timeLine.data;
+    return {
+      timeline: timeLine.data,
+      description: description,
+      profile_image_url: profile_image_url,
+    };
   };
 }
