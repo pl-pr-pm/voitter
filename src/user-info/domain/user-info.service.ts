@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { UserInfoCache } from '../infrastracture/cache/cache';
-import { GetTimeLine } from '../../core/domain/apis/twitter/getTimeline';
 import { UserInfoRepository } from '../infrastracture/repository/user-info.repository';
 import { SelectUserInfoDto } from '../interface/dto/select-user-info.dto';
+import { GetUserInfo } from './apis/twitter/getUserInfo';
 
 @Injectable()
 export class UserInfoService {
   constructor(
     private userInfoCache: UserInfoCache,
-    private getTimeLine: GetTimeLine,
     private userInfoRepository: UserInfoRepository,
+    private getUserInfo: GetUserInfo,
   ) {}
 
   // ユーザー情報を作成する
   async createUserInfo(username: string) {
     const { userId, description, profile_image_url } =
-      await this.getTimeLine._getUserInfoFromUserName(username);
+      await this.getUserInfo.getUserInfoFromUserName(username);
     const userInfo = await this.userInfoRepository.createUserInfo({
       userId,
       username,
