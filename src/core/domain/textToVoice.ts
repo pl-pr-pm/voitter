@@ -79,7 +79,10 @@ export class TextToVoice {
     const retArray: (TretArray | TbothRetArray)[] = []; //複数の型を持つ配列の定義方法（ハマる〜）
 
     try {
-      const timeline = await this.getTimeLine.getTimeLine(username, 5);
+      const timeline = await this.getTimeLine.getTimeLine(
+        username,
+        parseInt(process.env.TWITTER_TWEET_MAX_RESULT),
+      );
 
       for (const tweet of timeline) {
         retArray.push(await this.textToVoiceObj(tweet, options));
