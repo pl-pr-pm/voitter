@@ -11,12 +11,14 @@ import { GetTimeLine } from './domain/apis/twitter/getTimeline';
 import { TextToVoice } from './domain/textToVoice';
 import { AuthModule } from 'src/auth/auth.module';
 import { CoreCache } from './infrastracture/cache/cache';
+import { UserInfoModule } from 'src/user-info/user-info.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Tweet.name, schema: TweetSchema }]),
     AuthModule, // クラスをそれぞれインポートするのではなく、Moduleをインポートすることで、そのModuleでエクスポートしているクラスにのみアクセスできるようになる
     CacheModule.register({ ttl: 60, max: 10 }),
+    UserInfoModule,
   ],
   controllers: [CoreController],
   providers: [
@@ -29,5 +31,6 @@ import { CoreCache } from './infrastracture/cache/cache';
     TextToVoice,
     CoreCache,
   ],
+  exports: [GetTimeLine],
 })
 export class CoreModule {}

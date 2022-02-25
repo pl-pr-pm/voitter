@@ -9,9 +9,13 @@ export class UserInfoRepository {
   constructor(
     @InjectModel(UserInfo.name) private userInfoModel: Model<UserInfoDocument>,
   ) {}
-  async createTweet(createUserInfoDto: CreateUserInfoDto): Promise<UserInfo> {
-    const { username, description, profile_image_url } = createUserInfoDto;
+  async createUserInfo(
+    createUserInfoDto: CreateUserInfoDto,
+  ): Promise<UserInfo> {
+    const { userId, username, description, profile_image_url } =
+      createUserInfoDto;
     const userInfo = new this.userInfoModel({
+      userId,
       username,
       description,
       profile_image_url,
@@ -23,5 +27,9 @@ export class UserInfoRepository {
 
   async deleteByOptions(options): Promise<void> {
     this.userInfoModel.deleteOne(options);
+  }
+
+  async findByOptions(filter, projections): Promise<UserInfo> {
+    return this.userInfoModel.findOne(filter, projections);
   }
 }

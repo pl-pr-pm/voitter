@@ -4,12 +4,14 @@ import { TweetRepository } from '../infrastracture/repository/tweet.repository';
 import { SelectTweetDto } from '../interface/dto/select-tweet.dto';
 import { Toptions } from './type/type';
 import { CoreCache } from '../infrastracture/cache/cache';
+import { UserInfoModule } from '../../user-info/user-info.module';
 @Injectable()
 export class CoreService {
   constructor(
     private tweetRepository: TweetRepository,
     private textToVoice: TextToVoice,
     private coreCache: CoreCache,
+    private userInfoModule: UserInfoModule,
   ) {}
 
   // タイムライン除法を作成する
