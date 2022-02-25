@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 // import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
-import { UserInfoService } from './user-info/domain/user-info.service';
+import { UserInfoModule } from './user-info/user-info.module';
 
 @Module({
   imports: [
@@ -12,8 +12,9 @@ import { UserInfoService } from './user-info/domain/user-info.service';
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     MongooseModule.forRoot(process.env.DB_URI),
     AuthModule,
+    UserInfoModule,
   ],
   controllers: [],
-  providers: [UserInfoService],
+  providers: [],
 })
 export class AppModule {}

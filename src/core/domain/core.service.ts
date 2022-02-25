@@ -11,7 +11,6 @@ export class CoreService {
     private tweetRepository: TweetRepository,
     private textToVoice: TextToVoice,
     private coreCache: CoreCache,
-    private userInfoModule: UserInfoModule,
   ) {}
 
   // タイムライン除法を作成する
