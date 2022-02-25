@@ -30,7 +30,7 @@ export class DetectionLanguage {
     throw new HttpException(
       {
         statusCode: 511,
-        message: `文章の言語識別に失敗しました ${e.message()}`,
+        message: `文章の言語識別に失敗しました ${e.message}`,
       },
       511,
     );

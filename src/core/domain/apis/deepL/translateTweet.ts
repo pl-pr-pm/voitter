@@ -17,11 +17,11 @@ export class TranslateTweet {
       const body = `auth_key=${process.env.DEEPL_AUTHKEY}&text=${targetText}&target_lang=${process.env.DEEPL_TRANSLATE_TARGET_DEFAULT}`;
       const response = await axios.post(process.env.DEEPL_TRANSLATE_URL, body);
       return response.data.translations[0].text;
-    } catch (e) {
+    } catch (e: any) {
       throw new HttpException(
         {
           statusCode: 512,
-          message: `音声の生成に失敗しました ${e.message()}`,
+          message: `音声の生成に失敗しました ${e.message}`,
         },
         512,
       );

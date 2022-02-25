@@ -18,35 +18,29 @@ export class GetTimeLine {
         'tweet.fields': 'created_at',
       });
       return userTimeline.data;
-    } catch (e) {
+    } catch (e: any) {
       throw new HttpException(
         {
           statusCode: 514,
-          message: `timelineの取得に失敗しました ${e.message()}`,
+          message: `timelineの取得に失敗しました ${e.message}`,
         },
         514,
       );
     }
   };
-  // UsernameからUserIdを取得する
+  // UsernameからUserInfoを取得する
   _getUserInfoFromUserName = async (username: string) => {
     if (!username) {
       throw new BadRequestException(`usernameを入力してください`);
     }
     try {
-      const res = await client.userByUsername(username, {
-        'user.fields': 'description profile_image_url',
-      });
-      return {
-        userId: res.data.id,
-        description: res.data.description,
-        profile_image_url: res.data.profile_image_url,
-      };
-    } catch (e) {
+      const res = await client.userByUsername(username);
+      return res.data.id;
+    } catch (e: any) {
       throw new HttpException(
         {
           statusCode: 513,
-          message: `useridの取得に失敗しました ${e.message()}`,
+          message: `useridの取得に失敗しました ${e.message}`,
         },
         513,
       );
@@ -54,16 +48,11 @@ export class GetTimeLine {
   };
 
   getTimeLine = async (username: string, timeLineMaxResults: number) => {
-    const { userId, description, profile_image_url } =
-      await this._getUserInfoFromUserName(username);
+    const userId = await this._getUserInfoFromUserName(username);
     const timeLine = await this._getTimeLineFromUserId(
       userId,
       timeLineMaxResults,
     );
-    return {
-      timeline: timeLine.data,
-      description: description,
-      profile_image_url: profile_image_url,
-    };
+    return timeLine.data;
   };
 }

@@ -68,8 +68,8 @@ export class TextToVoice {
         };
         return retObj;
       }
-    } catch (e) {
-      this.logger.error(`Error発生しました ${e.message()}`);
+    } catch (e: any) {
+      this.logger.error(`Error発生しました ${e.message}`);
       return;
     }
   };
@@ -79,18 +79,17 @@ export class TextToVoice {
     const retArray: (TretArray | TbothRetArray)[] = []; //複数の型を持つ配列の定義方法（ハマる〜）
 
     try {
-      const { timeline, description, profile_image_url } =
-        await this.getTimeLine.getTimeLine(username, 5);
+      const timeline = await this.getTimeLine.getTimeLine(username, 5);
 
       for (const tweet of timeline) {
         retArray.push(await this.textToVoiceObj(tweet, options));
       }
       return retArray;
-    } catch (e) {
+    } catch (e: any) {
       throw new HttpException(
         {
           statusCode: 515,
-          message: `対象ユーザーのタイムラインの音声化に失敗しました ${e.message()}`,
+          message: `対象ユーザーのタイムラインの音声化に失敗しました ${e.message}`,
         },
         515,
       );

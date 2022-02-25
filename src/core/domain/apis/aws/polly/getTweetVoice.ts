@@ -1,10 +1,5 @@
 import { StartSpeechSynthesisTaskCommand } from '@aws-sdk/client-polly';
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { pollyClient } from './libs/pollyClient';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
@@ -82,11 +77,11 @@ export class GetTweetVoice {
         new StartSpeechSynthesisTaskCommand(params),
       );
       return data.SynthesisTask.OutputUri;
-    } catch (err) {
+    } catch (err: any) {
       throw new HttpException(
         {
           statusCode: 512,
-          message: `音声の生成に失敗しました ${err.message()}`,
+          message: `音声の生成に失敗しました ${err.message}`,
         },
         512,
       );
