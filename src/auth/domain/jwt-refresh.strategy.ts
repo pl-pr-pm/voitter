@@ -7,7 +7,11 @@ import { AuthService } from './auth.service';
 
 // passport における refresh token 用のjwtのストラテジー
 @Injectable()
-export class JwtRefreshTokenStrategy extends PassportStrategy(Strategy) {
+export class JwtRefreshTokenStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
+  private reg: RegExp;
   constructor(
     private userRepository: UserRepository,
     private authService: AuthService,
@@ -23,11 +27,19 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(Strategy) {
       secretOrKey: process.env.JWT_REFRESH_SECRET_KEY,
       passReqToCallBack: true, // validateメソッドにて、cookieを参照できるようにtrue
     });
+    this.reg = new RegExp(/[!"#$%&'()\*\+\-\.,\/:;<=>?@\[\\\]^_`{|}~]/g);
   }
   async validate(request: Request, payload: { username: string }) {
     const { username } = payload;
     try {
+      // 記号が含まれているか確認
+      // 含まれている場合は、UnauthorizedException を実行
+      // Guard デコレータ内で呼ばれるため、バリデーションを実施
+      if (this.reg.test(username)) {
+        throw new UnauthorizedException();
+      }
       const refreshToken = request?.cookies?.AuthneticationRefresh;
+      // RefreshトークンがDBに格納されたトークンと比較
       return this.authService.getUserRefreshToken(username, refreshToken);
     } catch (e) {
       throw new UnauthorizedException();
