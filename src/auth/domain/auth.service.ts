@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import { UserRepository } from '../infrastracture/repository/auth.repository';
 import { JwtService } from '@nestjs/jwt';
 import { CredentialsDto } from '../interface/dto/credentials.dto';
@@ -43,11 +47,47 @@ export class AuthService {
       secret: process.env.JWT_REFRESH_SECRET_KEY,
       expiresIn: parseInt(process.env.JWT_REFRESH_EXPIRATION),
     }); // 署名トークンの発行
-    const cookie = `AuthneticationRrefres=${jwtRefreshToken}; HttpOnly; Max-Age=${process.env.JWT_REFRESH_EXPIRATION}; Path=/;`;
+    const cookieWithRefreshToken = `AuthneticationRefresh=${jwtRefreshToken}; HttpOnly; Max-Age=${process.env.JWT_REFRESH_EXPIRATION}; Path=/;`;
     return {
       jwtRefreshToken,
-      cookie,
+      cookieWithRefreshToken,
     };
+  }
+  // RefreshトークンをDBに保存
+  async setHashedRefreshToken(username: string, refreshToken: string) {
+    const refreshSalt = await bcrypt.genSalt();
+    const hasedRefreshToken = await bcrypt.hash(refreshToken, refreshSalt);
+    await this.userRepository.updateByOptions(
+      { username: username },
+      { $set: { refreshToken: hasedRefreshToken } },
+    );
+  }
+  // 空のcookieを返却
+  async getEmptyCookie() {
+    return [
+      'Authentication=; HttpOnly; Path=/; Max-Age=0',
+      'AuthneticationRefresh=; HttpOnly; Path=/; Max-Age=0',
+    ];
+  }
+
+  // Refreshトークンが、DBに格納されているusernameのRefreshトークンと一致した、ユーザを返却する
+  async getUserRefreshToken(username: string, hasedRefreshToken: string) {
+    const user = await this.userRepository.findByOptions(
+      { username: username },
+      'username',
+      null,
+    );
+    if (user.length == 0) {
+      throw new NotFoundException();
+    }
+    const isMatchRefreshToken = await bcrypt.compare(
+      hasedRefreshToken,
+      user[0].refreshToken,
+    );
+
+    if (isMatchRefreshToken) {
+      return user[0];
+    }
   }
 
   async signIn(credentialsDto: CredentialsDto) {
@@ -61,11 +101,29 @@ export class AuthService {
       throw new UnauthorizedException(
         'ユーザー名またはパスワードを確認してください',
       );
+    // パスワード認証が通ったら
     if (user[0] && (await bcrypt.compare(password, user[0]?.password))) {
-      return await this.createCookieWithAccessToken(user[0].username);
+      // AccessToken, RefreshTokenを払い出す
+      const cookieWithAccessToken = await this.createCookieWithAccessToken(
+        user[0].username,
+      );
+      const { jwtRefreshToken, cookieWithRefreshToken } =
+        await this.createCookieWithRefreshToken(user[0].username);
+
+      // RefreshTokenをDBに保存
+      await this.setHashedRefreshToken(username, jwtRefreshToken);
+
+      // AccessToken,RefreshToken それぞれが格納されているCookieを返却する
+      return [cookieWithAccessToken, cookieWithRefreshToken];
     }
     throw new UnauthorizedException(
       'ユーザー名またはパスワードを確認してください',
+    );
+  }
+  async signOut(username: string) {
+    await this.userRepository.updateByOptions(
+      { username: username },
+      { $set: { refreshToken: null } },
     );
   }
 }

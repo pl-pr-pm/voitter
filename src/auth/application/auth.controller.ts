@@ -1,6 +1,15 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
-import { Response } from 'express';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
 import { AuthService } from '../domain/auth.service';
+import { JwtRefreshAuthGuard } from '../domain/guards/jwt-refresh.guard';
 import { CredentialsDto } from '../interface/dto/credentials.dto';
 
 @Controller('auth')
@@ -28,5 +37,24 @@ export class AuthController {
     const cookie = await this.authService.signIn(credentialsDto);
     response.setHeader('Set-Cookie', cookie);
     return response.send(credentialsDto.username);
+  }
+
+  @UseGuards(JwtRefreshAuthGuard)
+  @Post('signOut')
+  async signOut(@Body() username: string, @Res() response: Response) {
+    await this.authService.signOut(username);
+    const cookie = await this.authService.getEmptyCookie();
+    response.setHeader('Set-Cookie', cookie);
+    return response.send();
+  }
+
+  @UseGuards(JwtRefreshAuthGuard)
+  @Get('refresh')
+  async refresh(@Req() request: any, @Res() response: Response) {
+    const cookie = await this.authService.createCookieWithAccessToken(
+      request.user.username,
+    );
+    response.setHeader('Set-Cookie', cookie);
+    return response.send();
   }
 }
