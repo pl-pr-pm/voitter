@@ -24,6 +24,10 @@ export class UserRepository {
     return user.save();
   }
 
+  /**
+   * 以下メソッド達は、mongooseの仕様変更 or 別ormへの切り替え が発生した際の緩衝地帯として作成
+   */
+
   // 対象のユーザーを取得
   async findByOptions(
     filter: any,
@@ -32,6 +36,11 @@ export class UserRepository {
   ): Promise<User[]> {
     const docs = await this.userModel.find(filter, projection, options);
     return docs;
+  }
+
+  // 対象のユーザーを更新
+  async updateByOptions(filter: any, updateContents: any, options?: any) {
+    await this.userModel.updateOne(filter, updateContents, options);
   }
 
   // 対象のユーザーを削除
