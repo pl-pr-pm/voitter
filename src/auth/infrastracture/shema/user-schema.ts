@@ -18,6 +18,9 @@ export class User {
   @Prop({ type: {}, required: true })
   status: UserStatus;
 
+  @Prop()
+  refreshToken: string;
+
   @Prop({ required: true })
   createdAt: string;
 
