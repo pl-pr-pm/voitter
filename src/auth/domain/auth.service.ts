@@ -26,6 +26,30 @@ export class AuthService {
     });
   }
 
+  // Accessトークン
+  async createCookieWithAccessToken(username: string) {
+    const payload = { username: username };
+    const jwtAccessToken = await this.jwtService.sign(payload, {
+      secret: process.env.JWT_SECRET_KEY,
+      expiresIn: parseInt(process.env.JWT_EXPIRATION),
+    }); // 署名トークンの発行
+    return `Authentication=${jwtAccessToken}; HttpOnly; Max-Age=${process.env.JWT_EXPIRATION}; Path=/;`;
+  }
+
+  // Refreshトークン
+  async createCookieWithRefreshToken(username: string) {
+    const payload = { username: username };
+    const jwtRefreshToken = await this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_SECRET_KEY,
+      expiresIn: parseInt(process.env.JWT_REFRESH_EXPIRATION),
+    }); // 署名トークンの発行
+    const cookie = `AuthneticationRrefres=${jwtRefreshToken}; HttpOnly; Max-Age=${process.env.JWT_REFRESH_EXPIRATION}; Path=/;`;
+    return {
+      jwtRefreshToken,
+      cookie,
+    };
+  }
+
   async signIn(credentialsDto: CredentialsDto) {
     const { username, password } = credentialsDto;
     const user = await this.userRepository.findByOptions(
@@ -38,9 +62,7 @@ export class AuthService {
         'ユーザー名またはパスワードを確認してください',
       );
     if (user[0] && (await bcrypt.compare(password, user[0]?.password))) {
-      const payload = { username: user[0].username };
-      const jwtToken = await this.jwtService.sign(payload); // 署名トークンの発行
-      return `Authentication=${jwtToken}; HttpOnly; Max-Age=${process.env.JWT_EXPIRATION}; Path=/;`;
+      return await this.createCookieWithAccessToken(user[0].username);
     }
     throw new UnauthorizedException(
       'ユーザー名またはパスワードを確認してください',
