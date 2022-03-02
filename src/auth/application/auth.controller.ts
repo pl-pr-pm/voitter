@@ -7,11 +7,20 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { AuthService } from '../domain/auth.service';
 import { JwtAuthGuard } from '../domain/guards/jwt-auth.guard';
 import { JwtRefreshAuthGuard } from '../domain/guards/jwt-refresh.guard';
 import { CredentialsDto } from '../interface/dto/credentials.dto';
+
+/**
+ * 本APIの認証にはJWTを利用する
+ * JWTは、AccessToken/RefreshTokenの2種類を用意
+ * JWTはCookieに格納され、HTTP Onlyとする
+ * 通常時、AccessTokenにてAPIの認証を行い、AccessTokenの有効期限が切れた場合、/refresh より、新規のAccessTokenを払い出す
+ * RefreshTokenの有効期限が切れた場合、再度/singup を実行
+ * RefreshTokenが流出した場合、ユーザーのRefreshTokenを削除する
+ */
 
 @Controller('auth')
 export class AuthController {
