@@ -23,24 +23,26 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
           return request?.cookies?.AuthneticationRefresh;
         },
       ]),
+
       ignoreExpiration: false, // 有効期限切れをエラーとする
       secretOrKey: process.env.JWT_REFRESH_SECRET_KEY,
-      passReqToCallBack: true, // validateメソッドにて、cookieを参照できるようにtrue
+      passReqToCallback: true, // validateメソッドにて、cookieを参照できるようにtrue
     });
     this.reg = new RegExp(/[!"#$%&'()\*\+\-\.,\/:;<=>?@\[\\\]^_`{|}~]/g);
   }
-  async validate(request: Request, payload: { username: string }) {
+  async validate(req, payload, _) {
     const { username } = payload;
     try {
       // 記号が含まれているか確認
       // 含まれている場合は、UnauthorizedException を実行
       // Guard デコレータ内で呼ばれるため、バリデーションを実施
-      if (this.reg.test(username)) {
+      if (!username || this.reg.test(username)) {
         throw new UnauthorizedException();
       }
-      const refreshToken = request?.cookies?.AuthneticationRefresh;
+      const refreshToken = req?.cookies?.AuthneticationRefresh;
       // RefreshトークンがDBに格納されたトークンと比較
       return this.authService.getUserRefreshToken(username, refreshToken);
+      return;
     } catch (e) {
       throw new UnauthorizedException();
     }
