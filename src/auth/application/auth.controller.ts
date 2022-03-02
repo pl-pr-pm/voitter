@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from '../domain/auth.service';
+import { JwtAuthGuard } from '../domain/guards/jwt-auth.guard';
 import { JwtRefreshAuthGuard } from '../domain/guards/jwt-refresh.guard';
 import { CredentialsDto } from '../interface/dto/credentials.dto';
 
@@ -19,17 +20,17 @@ export class AuthController {
   // サインアップ用にユーザ/システムと二つ儲けている
   // ユーザーとシステムのサインアップのエンドポイントが一つであると、システム用の権限がユーザーに割り当てられるなど、システム障害を発生させないため
   // また、エンドポイントごとに、アクセス元を絞ったりしやすいように、エンドポイントを分割している
-  @Post('signUp')
+  @Post('/sign-up')
   async userSignUp(@Body() credentialsDto: CredentialsDto) {
     return await this.authService.userSignUp(credentialsDto);
   }
 
-  @Post('systemSignUp')
+  @Post('/system-sign-up')
   async systemSignUp(@Body() credentialsDto: CredentialsDto) {
     return await this.authService.systemSignUp(credentialsDto);
   }
 
-  @Post('signIn')
+  @Post('/sign-in')
   async signIn(
     @Body() credentialsDto: CredentialsDto,
     @Res() response: Response,
@@ -39,8 +40,8 @@ export class AuthController {
     return response.send(credentialsDto.username);
   }
 
-  @UseGuards(JwtRefreshAuthGuard)
-  @Post('signOut')
+  @UseGuards(JwtAuthGuard)
+  @Post('/sign-out')
   async signOut(@Body() username: string, @Res() response: Response) {
     await this.authService.signOut(username);
     const cookie = await this.authService.getEmptyCookie();
@@ -49,7 +50,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtRefreshAuthGuard)
-  @Get('refresh')
+  @Get('/refresh')
   async refresh(@Req() request: any, @Res() response: Response) {
     const cookie = await this.authService.createCookieWithAccessToken(
       request.user.username,
