@@ -9,13 +9,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './domain/jwt.strategy';
 import { JwtAuthGuard } from './domain/guards/jwt-auth.guard';
 import { RolesGuard } from './domain/guards/roles.guard';
+import { JwtRefreshAuthGuard } from './domain/guards/jwt-refresh.guard';
+import { JwtRefreshTokenStrategy } from './domain/jwt-refresh.strategy';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     PassportModule.register({ defaultStrategy: 'jwt' }), // defaultの認証方法をjwtとしている
     JwtModule.register({
-      secret: process.env.JWT_SECRET_KEY,
       signOptions: {
         expiresIn: process.env.JWT_EXPIRATION, // 秒
       },
@@ -28,6 +29,8 @@ import { RolesGuard } from './domain/guards/roles.guard';
     JwtStrategy,
     JwtAuthGuard,
     RolesGuard,
+    JwtRefreshAuthGuard,
+    JwtRefreshTokenStrategy,
   ],
   exports: [JwtStrategy, JwtAuthGuard, RolesGuard], // core moduleでも利用のため
 })
