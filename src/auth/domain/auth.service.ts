@@ -30,7 +30,7 @@ export class AuthService {
     });
   }
 
-  // Accessトークン
+  // Accessトークン作成
   async createCookieWithAccessToken(username: string) {
     const payload = { username: username };
     const jwtAccessToken = await this.jwtService.sign(payload, {
@@ -40,7 +40,7 @@ export class AuthService {
     return `Authentication=${jwtAccessToken}; HttpOnly; Max-Age=${process.env.JWT_EXPIRATION}; Path=/;`;
   }
 
-  // Refreshトークン
+  // Refreshトークン作成
   async createCookieWithRefreshToken(username: string) {
     const payload = { username: username };
     const jwtRefreshToken = await this.jwtService.sign(payload, {
@@ -71,25 +71,26 @@ export class AuthService {
   }
 
   // Refreshトークンが、DBに格納されているusernameのRefreshトークンと一致した、ユーザを返却する
-  async getUserRefreshToken(username: string, hasedRefreshToken: string) {
+  async getUserRefreshToken(username: string, refreshToken: string) {
     const user = await this.userRepository.findByOptions(
       { username: username },
-      'username',
+      'username refreshToken',
       null,
     );
     if (user.length == 0) {
       throw new NotFoundException();
     }
+
     const isMatchRefreshToken = await bcrypt.compare(
-      hasedRefreshToken,
-      user[0].refreshToken,
+      refreshToken,
+      user[0].refreshToken, // hased
     );
 
     if (isMatchRefreshToken) {
-      return user[0];
+      return user[0].username;
     }
   }
-
+  // Refresh/AccessTokenを払い出す
   async signIn(credentialsDto: CredentialsDto) {
     const { username, password } = credentialsDto;
     const user = await this.userRepository.findByOptions(
@@ -121,9 +122,8 @@ export class AuthService {
     );
   }
   async signOut(username: string) {
-    await this.userRepository.updateByOptions(
-      { username: username },
-      { $set: { refreshToken: null } },
-    );
+    await this.userRepository.updateByOptions(username, {
+      $set: { refreshToken: '' },
+    });
   }
 }
