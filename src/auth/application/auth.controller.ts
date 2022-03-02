@@ -20,17 +20,17 @@ export class AuthController {
   // サインアップ用にユーザ/システムと二つ儲けている
   // ユーザーとシステムのサインアップのエンドポイントが一つであると、システム用の権限がユーザーに割り当てられるなど、システム障害を発生させないため
   // また、エンドポイントごとに、アクセス元を絞ったりしやすいように、エンドポイントを分割している
-  @Post('/sign-up')
+  @Post('/signup')
   async userSignUp(@Body() credentialsDto: CredentialsDto) {
     return await this.authService.userSignUp(credentialsDto);
   }
 
-  @Post('/system-sign-up')
+  @Post('/system-signup')
   async systemSignUp(@Body() credentialsDto: CredentialsDto) {
     return await this.authService.systemSignUp(credentialsDto);
   }
 
-  @Post('/sign-in')
+  @Post('/signin')
   async signIn(
     @Body() credentialsDto: CredentialsDto,
     @Res() response: Response,
@@ -41,7 +41,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/sign-out')
+  @Post('/signout')
   async signOut(@Body() username: string, @Res() response: Response) {
     await this.authService.signOut(username);
     const cookie = await this.authService.getEmptyCookie();
