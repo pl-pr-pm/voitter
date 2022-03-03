@@ -62,9 +62,23 @@ export class AuthController {
   @Get('/refresh')
   async refresh(@Req() request: any, @Res() response: Response) {
     const cookie = await this.authService.createCookieWithAccessToken(
-      request.user.username,
+      request.user, //JwtRefreshAuthGuard より、requestコンテキストに格納される
     );
     response.setHeader('Set-Cookie', cookie);
     return response.send();
+  }
+
+  /**
+   * ユーザーが自身で変更できる情報の更新
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('/update')
+  async updateUser(@Req() req: any, @Body() body: any) {
+    const updateContents = {
+      username: body.username,
+      password: body.password,
+      imageUrl: body.imageUrl,
+    };
+    return await this.authService.updateUser(req.user.username, updateContents);
   }
 }
