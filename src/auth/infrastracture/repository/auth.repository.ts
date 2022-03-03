@@ -45,6 +45,6 @@ export class UserRepository {
 
   // 対象のユーザーを削除
   async deleteByOptions(options): Promise<void> {
-    this.userModel.deleteMany(options);
+    await this.userModel.deleteMany(options);
   }
 }
