@@ -32,7 +32,7 @@ export class UserRepository {
   async findByOptions(
     filter: any,
     projection: string,
-    options: any,
+    options?: any,
   ): Promise<User[]> {
     const docs = await this.userModel.find(filter, projection, options);
     return docs;
@@ -40,7 +40,7 @@ export class UserRepository {
 
   // 対象のユーザーを更新
   async updateByOptions(filter: any, updateContents: any, options?: any) {
-    await this.userModel.updateOne(filter, updateContents, options);
+    return await this.userModel.updateOne(filter, updateContents, options);
   }
 
   // 対象のユーザーを削除
