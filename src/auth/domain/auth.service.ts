@@ -20,6 +20,7 @@ export class AuthService {
     return await this.userRepository.createUser({
       ...credentialsDto,
       status: UserStatus.MEMBERS,
+      imageUrl: 'default.png',
     });
   }
 
@@ -27,7 +28,34 @@ export class AuthService {
     return await this.userRepository.createUser({
       ...credentialsDto,
       status: UserStatus.SYSTEM,
+      imageUrl: 'default.png',
     });
+  }
+
+  /**
+   * User情報(username password status imageUrl) を返却する
+   */
+  async getUser(username: string) {
+    return await this.userRepository.findByOptions(
+      { username: username },
+      'username password status imageUrl',
+    );
+  }
+
+  /**
+   * User情報を更新する
+   * - updateContents
+   *   更新する内容
+   *   e.g. {username: "変更username", imageUrl: "変更imageUrl"}
+   */
+  async updateUser(username: string, updateContents: any) {
+    const result = await this.userRepository.updateByOptions(
+      { username: username },
+      { $set: updateContents },
+    );
+    if (result[0]?.username) {
+      return result[0].username;
+    }
   }
 
   // Accessトークン作成
@@ -72,11 +100,12 @@ export class AuthService {
 
   // Refreshトークンが、DBに格納されているusernameのRefreshトークンと一致した、ユーザを返却する
   async getUserRefreshToken(username: string, refreshToken: string) {
+    console.log('username', username);
     const user = await this.userRepository.findByOptions(
       { username: username },
       'username refreshToken',
-      null,
     );
+    console.log('user', user);
     if (user.length == 0) {
       throw new NotFoundException();
     }
