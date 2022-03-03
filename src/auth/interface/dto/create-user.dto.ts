@@ -21,4 +21,7 @@ export class CreateUserDto {
 
   @IsEnum(UserStatus)
   status: UserStatus;
+
+  @IsString()
+  imageUrl: string;
 }

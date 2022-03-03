@@ -19,6 +19,9 @@ export class User {
   status: UserStatus;
 
   @Prop()
+  imageUrl: string;
+
+  @Prop()
   refreshToken: string;
 
   @Prop({ required: true })
