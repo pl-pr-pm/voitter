@@ -49,13 +49,11 @@ export class AuthService {
    *   e.g. {username: "変更username", imageUrl: "変更imageUrl"}
    */
   async updateUser(username: string, updateContents: any) {
-    const result = await this.userRepository.updateByOptions(
+    await this.userRepository.updateByOptions(
       { username: username },
       { $set: updateContents },
     );
-    if (result[0]?.username) {
-      return result[0].username;
-    }
+    return updateContents;
   }
 
   // Accessトークン作成
@@ -100,12 +98,10 @@ export class AuthService {
 
   // Refreshトークンが、DBに格納されているusernameのRefreshトークンと一致した、ユーザを返却する
   async getUserRefreshToken(username: string, refreshToken: string) {
-    console.log('username', username);
     const user = await this.userRepository.findByOptions(
       { username: username },
       'username refreshToken',
     );
-    console.log('user', user);
     if (user.length == 0) {
       throw new NotFoundException();
     }
@@ -150,9 +146,16 @@ export class AuthService {
       'ユーザー名またはパスワードを確認してください',
     );
   }
+
   async signOut(username: string) {
     await this.userRepository.updateByOptions(username, {
       $set: { refreshToken: '' },
     });
+  }
+
+  async deleteUser(username: string) {
+    await this.userRepository.deleteByOptions({ username: username });
+    const emptyCookie = this.getEmptyCookie();
+    return emptyCookie;
   }
 }

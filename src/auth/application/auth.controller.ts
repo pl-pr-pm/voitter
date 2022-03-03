@@ -73,12 +73,50 @@ export class AuthController {
    */
   @UseGuards(JwtAuthGuard)
   @Post('/update')
-  async updateUser(@Req() req: any, @Body() body: any) {
+  async updateUser(
+    @Req() req: any,
+    @Body() body: any,
+    @Res() response: Response,
+  ) {
     const updateContents = {
       username: body.username,
       password: body.password,
       imageUrl: body.imageUrl,
     };
-    return await this.authService.updateUser(req.user.username, updateContents);
+
+    // 更新対象としてusernameが存在するかどうか
+    const updateUsername = body.username ? body.username : req.user.username;
+
+    // Update内容
+    const resUpdateContents = await this.authService.updateUser(
+      req.user.username,
+      updateContents,
+    );
+
+    const cookieWithAccessToken =
+      await this.authService.createCookieWithAccessToken(updateUsername);
+    const { jwtRefreshToken, cookieWithRefreshToken } =
+      await this.authService.createCookieWithRefreshToken(updateUsername);
+
+    // RefreshTokenをDBに保存
+    await this.authService.setHashedRefreshToken(
+      updateUsername,
+      jwtRefreshToken,
+    );
+
+    response.setHeader('Set-Cookie', [
+      cookieWithAccessToken,
+      cookieWithRefreshToken,
+    ]);
+
+    return response.send(resUpdateContents);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/delete')
+  async deleteUser(@Req() req: any, @Res() response: Response) {
+    const cookie = await this.authService.deleteUser(req.user.username);
+    response.setHeader('Set-Cookie', cookie);
+    return response.send();
   }
 }
