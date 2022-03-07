@@ -11,6 +11,7 @@ import { JwtAuthGuard } from './domain/guards/jwt-auth.guard';
 import { RolesGuard } from './domain/guards/roles.guard';
 import { JwtRefreshAuthGuard } from './domain/guards/jwt-refresh.guard';
 import { JwtRefreshTokenStrategy } from './domain/jwt-refresh.strategy';
+import { S3Upload } from './domain/apis/uploadFileToS3';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { JwtRefreshTokenStrategy } from './domain/jwt-refresh.strategy';
     RolesGuard,
     JwtRefreshAuthGuard,
     JwtRefreshTokenStrategy,
+    S3Upload,
   ],
   exports: [JwtStrategy, JwtAuthGuard, RolesGuard], // core moduleでも利用のため
 })
