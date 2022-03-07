@@ -8,11 +8,16 @@ import { JwtService } from '@nestjs/jwt';
 import { CredentialsDto } from '../interface/dto/credentials.dto';
 import * as bcrypt from 'bcrypt';
 import { UserStatus } from './enum/user-status';
+import { S3Upload } from './apis/uploadFileToS3';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const uuid4 = require('uuid4');
+
 @Injectable()
 export class AuthService {
   constructor(
     private userRepository: UserRepository,
     private jwtService: JwtService,
+    private s3Upload: S3Upload,
   ) {}
 
   // ステータスの付与をユーザー/システムで混合しないようロジックを別にしている
@@ -33,12 +38,12 @@ export class AuthService {
   }
 
   /**
-   * User情報(username password status imageUrl) を返却する
+   * User情報(username password imageUrl) を返却する
    */
   async getUser(username: string) {
     return await this.userRepository.findByOptions(
       { username: username },
-      'username password status imageUrl',
+      'username password imageUrl',
     );
   }
 
@@ -46,14 +51,34 @@ export class AuthService {
    * User情報を更新する
    * - updateContents
    *   更新する内容
-   *   e.g. {username: "変更username", imageUrl: "変更imageUrl"}
+   *   e.g. {username: "変更username", image: "変更image"}
    */
   async updateUser(username: string, updateContents: any) {
+    let updateVal = {};
+
+    if (updateContents.isImageChange) {
+      const bucketName = process.env.AVATAR_BUCKET_NAME;
+      const imagename = `${uuid4()}.jpg`; //jpg固定
+      await this.s3Upload.upload(
+        bucketName,
+        imagename,
+        'image/jpeg',
+        updateContents.image.buffer,
+      );
+      updateVal = {
+        username: username,
+        imageUrl: `https://${bucketName}.s3.ap-northeast-1.amazonaws.com/${imagename}`,
+      };
+    } else {
+      updateVal = {
+        username: username,
+      };
+    }
     await this.userRepository.updateByOptions(
       { username: username },
-      { $set: updateContents },
+      { $set: updateVal },
     );
-    return updateContents;
+    return updateVal;
   }
 
   // Accessトークン作成
@@ -63,7 +88,7 @@ export class AuthService {
       secret: process.env.JWT_SECRET_KEY,
       expiresIn: parseInt(process.env.JWT_EXPIRATION),
     }); // 署名トークンの発行
-    return `Authentication=${jwtAccessToken}; HttpOnly; Max-Age=${process.env.JWT_EXPIRATION}; Path=/;`;
+    return `Authentication=${jwtAccessToken}; HttpOnly; Max-Age=${process.env.JWT_EXPIRATION}; Path=/;  SameSite=None; Secure;`;
   }
 
   // Refreshトークン作成
@@ -73,7 +98,8 @@ export class AuthService {
       secret: process.env.JWT_REFRESH_SECRET_KEY,
       expiresIn: parseInt(process.env.JWT_REFRESH_EXPIRATION),
     }); // 署名トークンの発行
-    const cookieWithRefreshToken = `AuthneticationRefresh=${jwtRefreshToken}; HttpOnly; Max-Age=${process.env.JWT_REFRESH_EXPIRATION}; Path=/;`;
+    const cookieWithRefreshToken = `AuthneticationRefresh=${jwtRefreshToken}; HttpOnly; Max-Age=${process.env.JWT_REFRESH_EXPIRATION}; Path=/; SameSite=None; Secure;`;
+
     return {
       jwtRefreshToken,
       cookieWithRefreshToken,
@@ -148,9 +174,12 @@ export class AuthService {
   }
 
   async signOut(username: string) {
-    await this.userRepository.updateByOptions(username, {
-      $set: { refreshToken: '' },
-    });
+    await this.userRepository.updateByOptions(
+      { username: username },
+      {
+        $set: { refreshToken: '' },
+      },
+    );
   }
 
   async deleteUser(username: string) {
