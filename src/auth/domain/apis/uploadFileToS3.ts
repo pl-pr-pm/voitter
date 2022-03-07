@@ -4,15 +4,22 @@ import { HttpException, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class S3Upload {
-  async upload(bucketName: string, key: string, data: any) {
+  async upload(
+    bucketName: string,
+    key: string,
+    contentType: string,
+    data: any,
+  ) {
     try {
       const result = await s3.send(
         new PutObjectCommand({
           Bucket: bucketName,
           Key: key,
           Body: data,
+          ContentType: contentType,
         }),
       );
+      console.log(result);
       return;
     } catch (e: any) {
       console.log(e.message);
