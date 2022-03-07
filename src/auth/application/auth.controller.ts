@@ -3,10 +3,14 @@ import {
   Controller,
   Get,
   Post,
+  Query,
   Req,
   Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { AuthService } from '../domain/auth.service';
 import { JwtAuthGuard } from '../domain/guards/jwt-auth.guard';
@@ -51,7 +55,8 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('/signout')
-  async signOut(@Body() username: string, @Res() response: Response) {
+  async signOut(@Req() request: any, @Res() response: Response) {
+    const username: string = request.user.username;
     await this.authService.signOut(username);
     const cookie = await this.authService.getEmptyCookie();
     response.setHeader('Set-Cookie', cookie);
@@ -72,16 +77,18 @@ export class AuthController {
    * ユーザーが自身で変更できる情報の更新
    */
   @UseGuards(JwtAuthGuard)
-  @Post('/update')
+  @Post('/user')
+  @UseInterceptors(FileInterceptor('img'))
   async updateUser(
+    @UploadedFile() file,
     @Req() req: any,
     @Body() body: any,
     @Res() response: Response,
   ) {
     const updateContents = {
       username: body.username,
-      password: body.password,
-      imageUrl: body.imageUrl,
+      image: file,
+      isImageChange: body.isImageChange,
     };
 
     // 更新対象としてusernameが存在するかどうか
@@ -93,23 +100,34 @@ export class AuthController {
       updateContents,
     );
 
-    const cookieWithAccessToken =
-      await this.authService.createCookieWithAccessToken(updateUsername);
-    const { jwtRefreshToken, cookieWithRefreshToken } =
-      await this.authService.createCookieWithRefreshToken(updateUsername);
+    // body.usernameが更新対象としてリクエストされていること
+    // かつ
+    // body.usernameとJWTのpayloadのusernameが同一でないこと
+    if (body.username && !(body.username === req.user.username)) {
+      const cookieWithAccessToken =
+        await this.authService.createCookieWithAccessToken(updateUsername);
+      const { jwtRefreshToken, cookieWithRefreshToken } =
+        await this.authService.createCookieWithRefreshToken(updateUsername);
 
-    // RefreshTokenをDBに保存
-    await this.authService.setHashedRefreshToken(
-      updateUsername,
-      jwtRefreshToken,
-    );
+      // RefreshTokenをDBに保存
+      await this.authService.setHashedRefreshToken(
+        updateUsername,
+        jwtRefreshToken,
+      );
 
-    response.setHeader('Set-Cookie', [
-      cookieWithAccessToken,
-      cookieWithRefreshToken,
-    ]);
+      response.setHeader('Set-Cookie', [
+        cookieWithAccessToken,
+        cookieWithRefreshToken,
+      ]);
+    }
 
     return response.send(resUpdateContents);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/user')
+  async getUser(@Req() req: any) {
+    return await this.authService.getUser(req.user.username);
   }
 
   @UseGuards(JwtAuthGuard)
