@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Post,
-  Query,
   Req,
   Res,
   UploadedFile,
@@ -80,7 +79,7 @@ export class AuthController {
   @Post('/user')
   @UseInterceptors(FileInterceptor('img'))
   async updateUser(
-    @UploadedFile() file,
+    @UploadedFile() file: Express.Multer.File,
     @Req() req: any,
     @Body() body: any,
     @Res() response: Response,
