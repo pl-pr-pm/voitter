@@ -10,13 +10,13 @@ export class DetectionLanguage {
     // \u3040-\u309f ひらがな
     // \u30a0-\u30ff カタカナ
     // \u30e0-\u9fcf 漢字
-    return target.match(/[\u3040-\u309f\u30a0-\u30ff\u30e0-\u9fcf]+$/)
+    return target.match(/[\u3040-\u309f\u30a0-\u30ff\u30e0-\u9fcf].*/)
       ? true
       : false;
   };
 
   detectionLanguage = async (targetText: string): Promise<string> => {
-    let detectionLang = process.env.TWEETVOICE_DEFAULT_LANG;
+    let detectionLang = process.env.DETECTION_NATIVE_LANGUAGE;
     if (!targetText) {
       throw new BadRequestException('識別対象文章を確認してください');
     }
