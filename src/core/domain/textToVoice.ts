@@ -5,6 +5,7 @@ import { TranslateTweet } from './apis/deepL/translateTweet';
 import { DetectionLanguage } from './apis/detectionLanguage/detectionLanguage';
 import { GetTimeLine } from './apis/twitter/getTimeline';
 import { Toptions, TretArray, TbothRetArray } from './type/type';
+import { replaceUrl } from '../../util/replaceUrl';
 
 @Injectable()
 export class TextToVoice {
@@ -17,7 +18,7 @@ export class TextToVoice {
   ) {}
   // ツイートのオブジェクトを受け取り、音声ファイルを格納したs3のURLを追加し、返却する
   textToVoiceObj = async (tweet: TweetV2, options: Toptions) => {
-    let voiceTarget = tweet.text;
+    let voiceTarget = replaceUrl(tweet.text, ''); //音声化対象ツイートからURLを除外する
     let tweetLang = process.env.TWEETVOICE_DEFAULT_LANG;
     try {
       if (options.isTranslate) {
