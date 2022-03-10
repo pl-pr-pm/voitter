@@ -31,13 +31,8 @@ export class CoreService {
         },
       });
     }
-    this.tweetRepository.createBulkTweet(query);
-    // データを新規作成・DBへの格納後のデータを返却するのではなく、DB格納前にデータを返却するので、DBから取得した際のデータ構造と合わせる
-    const retTweets = {
-      username: username,
-      tweetContent: tweets,
-    };
-    return retTweets;
+    await this.tweetRepository.createBulkTweet(query);
+    return;
   }
 
   // 引数によって動的に取得内容を決定する
@@ -108,7 +103,13 @@ export class CoreService {
       timelines[0]?.createdAt.substring(0, 10) !== now.substring(0, 10)
     ) {
       await this._deleteTimeLine(selectTweetDto);
-      const timelines = await this._createTweet(username, now, options);
+      await this._createTweet(username, now, options);
+      const timelines = await this._selectTweet(
+        { username: username, isTranslate: options.isTranslate },
+        'username tweetContent',
+        { tweetCreatedAt: 'desc' },
+        parseInt(process.env.TWEET_MAX_RESULT),
+      );
       await this.coreCache.deleteCache(username);
       await this.coreCache.setCache(username, timelines);
       return timelines;
