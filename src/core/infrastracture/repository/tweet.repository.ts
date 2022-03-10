@@ -24,7 +24,7 @@ export class TweetRepository {
 
   // 複数件のドキュメントを登録
   async createBulkTweet(tweetArray) {
-    this.tweetModel.bulkWrite(tweetArray); // DBに登録したデータはレスポンス速度を速めるため返却しない。DBとクライアントとで整合性がなくても問題ない。
+    await this.tweetModel.bulkWrite(tweetArray);
   }
 
   // 対象のタイムラインを取得
