@@ -19,10 +19,10 @@ export class TextToVoice {
   // ツイートのオブジェクトを受け取り、音声ファイルを格納したs3のURLを追加し、返却する
   textToVoiceObj = async (tweet: TweetV2, options: Toptions) => {
     let voiceTarget = replaceUrl(tweet.text, ''); //音声化対象ツイートからURLを除外する
-    let tweetLang = process.env.TWEETVOICE_DEFAULT_LANG;
+    let tweetLang = process.env.DETECTION_NATIVE_LANGUAGE;
     try {
       if (options.isTranslate) {
-        voiceTarget = await this.translateTweet.translateTweet(tweet.text);
+        voiceTarget = await this.translateTweet.translateTweet(voiceTarget);
       } else {
         // 翻訳しない場合、ツイートの言語は原文の言語となるため、ツイートの言語を識別する
         // ツイートの言語を識別するが、現状pollyでの音声生成は、対象となるマッピングが多いため日本語・英語 発音のみとする
@@ -48,7 +48,7 @@ export class TextToVoice {
           ),
         ]);
         const retObj = {
-          tweetText: tweet.text,
+          tweetText: options.isTranslate ? voiceTarget : tweet.text,
           createdAt: tweet.created_at,
           maleVoiceUrl: maleVoiceUrl,
           femaleVoiceUrl: femaleVoiceUrl,
@@ -63,7 +63,7 @@ export class TextToVoice {
         );
 
         const retObj = {
-          tweetText: tweet.text,
+          tweetText: options.isTranslate ? voiceTarget : tweet.text,
           createdAt: tweet.created_at,
           voiceUrl: voiceUrl,
         };
