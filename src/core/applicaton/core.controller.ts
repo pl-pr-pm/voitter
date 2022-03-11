@@ -30,7 +30,9 @@ export class CoreController {
   // 翻訳されたタイムラインの取得は、ログインしている必要がある
   @Get('/translate')
   @UseGuards(JwtAuthGuard)
-  async selectTranslateTimeline(@QueryToDto() selectTweetDto: SelectTweetDto) {
+  async selectTranslateTimeline(
+    @QueryToDto('username') selectTweetDto: SelectTweetDto,
+  ) {
     return await this.coreService.selectTimeLine(selectTweetDto, {
       isTranslate: true,
       isMale: true,
