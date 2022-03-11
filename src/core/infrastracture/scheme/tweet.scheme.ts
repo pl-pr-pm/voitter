@@ -16,6 +16,9 @@ export class Tweet {
   tweetCreatedAt: string;
 
   @Prop({ required: true })
+  isTranslate: string;
+
+  @Prop({ required: true })
   createdAt: string;
 
   @Prop()
