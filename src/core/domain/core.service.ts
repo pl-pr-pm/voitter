@@ -4,7 +4,6 @@ import { TweetRepository } from '../infrastracture/repository/tweet.repository';
 import { SelectTweetDto } from '../interface/dto/select-tweet.dto';
 import { Toptions } from './type/type';
 import { CoreCache } from '../infrastracture/cache/cache';
-import { UserInfoModule } from '../../user-info/user-info.module';
 @Injectable()
 export class CoreService {
   constructor(
@@ -14,16 +13,31 @@ export class CoreService {
   ) {}
 
   // タイムライン除法を作成する
-  async _createTweet(username: string, now: string, options: any) {
+  async _createTweet(
+    username: string,
+    now: string,
+    options: any,
+    untilId: string,
+  ) {
     const query = [];
-    const tweets = await this.textToVoice.run(username, options);
+    const { tweets, oldestId } = await this.textToVoice.run(
+      username,
+      options,
+      untilId,
+    );
+
     for (const tweet of tweets) {
       query.push({
         insertOne: {
           document: {
+            tweetId: tweet.tweetId,
             username: username,
-            tweetContent: tweet,
-            tweetCreatedAt: tweet.createdAt,
+            tweetContent: {
+              tweetText: tweet.tweetText,
+              createdAt: tweet.createdAt,
+              voiceUrl: tweet.voiceUrl,
+            },
+            // tweetCreatedAt: tweet.createdAt,
             isTranslate: options.isTranslate,
             createdAt: now,
             updatedAt: now,
@@ -59,59 +73,111 @@ export class CoreService {
   }
 
   // タイムライン情報を取得。存在しない場合は、新規作成しDBに登録する
-  async selectTimeLine(selectTweetDto: SelectTweetDto, options: Toptions) {
+  async selectTimeLine(
+    selectTweetDto: SelectTweetDto,
+    options: Toptions,
+    untilId: string,
+  ) {
     const { username } = selectTweetDto;
+    const cacheKey = `${username}_${untilId}`;
+    const now = new Date().toISOString();
+    // tweetIdにおける検索条件
+    const tweetIdCondition = {
+      $lt: untilId,
+    };
+
     // usernameをキーとしたデータがキャッシュにあれば、キャッシュのデータを返却
-    const cacheResult = await this.coreCache.getCache(username);
+    const cacheResult = await this.coreCache.getCache(cacheKey);
     if (cacheResult) return cacheResult;
 
-    const now = new Date().toISOString();
     // 後続処理の判定のため、対象ユーザーのデータを一件取得する
     const timelines = await this._selectTweet(
       // 翻訳の有無により、タイムライン情報作成処理の実行有無を判定するため、isTranslateを引数に加える
       // isTranslate:true のoption の場合であれば、isTranslate:trueの最新作成日を取得する
-      { username: username, isTranslate: options.isTranslate },
+      {
+        username: username,
+        isTranslate: options.isTranslate,
+        tweetId: tweetIdCondition,
+      },
       'createdAt',
       { createdAt: 'desc' },
       1,
     );
+
     // タイムライン情報が取得できなかった場合
-    if (!timelines) {
+    if (timelines.length === 0) {
       // タイムライン情報を作成する
-      const timelines = await this._createTweet(username, now, options);
-      await this.coreCache.deleteCache(username);
-      await this.coreCache.setCache(username, timelines);
+      await this._createTweet(username, now, options, untilId);
+      // タイムライン情報を取得する
+      let timelines;
+      // 初回りクエスト時、untilIdには、'0000000000'が格納される
+      // 初回リクエスト時は、DBに作成された全データを取得するため、filterにltを指定しない
+      if (untilId === '0000000000') {
+        timelines = await this._selectTweet(
+          {
+            username: username,
+            isTranslate: options.isTranslate,
+          },
+          'tweetId username tweetContent',
+          { tweetId: 'desc' },
+          parseInt(process.env.TWEET_MAX_RESULT),
+        );
+        // 初回リクエスト以外
+      } else {
+        timelines = await this._selectTweet(
+          {
+            username: username,
+            isTranslate: options.isTranslate,
+            tweetId: tweetIdCondition,
+          },
+          'tweetId username tweetContent',
+          { tweetId: 'desc' },
+          parseInt(process.env.TWEET_MAX_RESULT),
+        );
+      }
+      await this.coreCache.deleteCache(cacheKey);
+      await this.coreCache.setCache(cacheKey, timelines);
+
       return timelines;
+
       // タイムライン情報が取得できたが、リクエスト処理日とDBへのタイムライン情報登録日に差がない場合、
       // DBからデータを取得し、リターンする
     } else if (
-      timelines &&
+      timelines.length !== 0 &&
       timelines[0]?.createdAt.substring(0, 10) === now.substring(0, 10)
     ) {
       const timelines = await this._selectTweet(
-        { username: username, isTranslate: options.isTranslate },
-        'username tweetContent',
-        { tweetCreatedAt: 'desc' },
+        {
+          username: username,
+          isTranslate: options.isTranslate,
+          tweetId: tweetIdCondition,
+        },
+        'tweetId username tweetContent',
+        { tweetId: 'desc' },
         parseInt(process.env.TWEET_MAX_RESULT),
       );
       // キャッシュのttlが切れた場合なので、setCacheのみ実施
-      await this.coreCache.setCache(username, timelines);
+      await this.coreCache.setCache(cacheKey, timelines);
       return timelines;
       // リクエスト処理日とDBへのタイムライン情報登録日に差がある場合、タイムライン情報を新規作成し、リターンする
     } else if (
-      timelines &&
+      timelines.length !== 0 &&
       timelines[0]?.createdAt.substring(0, 10) !== now.substring(0, 10)
     ) {
       await this._deleteTimeLine(selectTweetDto);
-      await this._createTweet(username, now, options);
+      await this._createTweet(username, now, options, untilId);
       const timelines = await this._selectTweet(
-        { username: username, isTranslate: options.isTranslate },
-        'username tweetContent',
-        { tweetCreatedAt: 'desc' },
+        {
+          username: username,
+          isTranslate: options.isTranslate,
+          tweetId: tweetIdCondition,
+        },
+        'tweetId username tweetContent',
+        { tweetId: 'desc' },
         parseInt(process.env.TWEET_MAX_RESULT),
       );
-      await this.coreCache.deleteCache(username);
-      await this.coreCache.setCache(username, timelines);
+      await this.coreCache.deleteCache(cacheKey);
+      await this.coreCache.setCache(cacheKey, timelines);
       return timelines;
     }
   }

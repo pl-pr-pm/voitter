@@ -7,16 +7,29 @@ export class GetTimeLine {
   _getTimeLineFromUserId = async (
     userId: string,
     timeLineMaxResults: number,
+    untilId: string,
   ) => {
     try {
       if (!userId) {
         throw new Error('useridを入力してください');
       }
-      const userTimeline = await client.userTimeline(userId, {
-        exclude: 'replies',
-        max_results: timeLineMaxResults,
-        'tweet.fields': 'created_at',
-      });
+      let userTimeline;
+
+      // 初回リクエスト or internal用
+      if (untilId === '0000000000') {
+        userTimeline = await client.userTimeline(userId, {
+          exclude: 'replies',
+          max_results: timeLineMaxResults,
+          'tweet.fields': 'created_at',
+        });
+      } else {
+        userTimeline = await client.userTimeline(userId, {
+          exclude: 'replies',
+          until_id: untilId,
+          max_results: timeLineMaxResults,
+          'tweet.fields': 'created_at',
+        });
+      }
       return userTimeline.data;
     } catch (e: any) {
       throw new HttpException(
@@ -47,12 +60,17 @@ export class GetTimeLine {
     }
   };
 
-  getTimeLine = async (username: string, timeLineMaxResults: number) => {
+  getTimeLine = async (
+    username: string,
+    timeLineMaxResults: number,
+    untilId: string,
+  ) => {
     const userId = await this._getUserInfoFromUserName(username);
     const timeLine = await this._getTimeLineFromUserId(
       userId,
       timeLineMaxResults,
+      untilId,
     );
-    return timeLine.data;
+    return timeLine;
   };
 }

@@ -31,72 +31,39 @@ export class TextToVoice {
 
         tweetLang = await this.detectionLanguage.detectionLanguage(tweet.text);
       }
-      // 男性・女性 両方の声で音声を生成する場合
-      if (options.isBoth) {
-        const [maleVoiceUrl, femaleVoiceUrl] = await Promise.all([
-          this.getTweetVoice.getTweetVoice(
-            voiceTarget,
-            options.isTranslate,
-            (options.isMale = true),
-            tweetLang,
-          ),
-          this.getTweetVoice.getTweetVoice(
-            voiceTarget,
-            options.isTranslate,
-            (options.isMale = false),
-            tweetLang,
-          ),
-        ]);
-        const retObj = {
-          tweetText: options.isTranslate ? voiceTarget : tweet.text,
-          createdAt: tweet.created_at,
-          maleVoiceUrl: maleVoiceUrl,
-          femaleVoiceUrl: femaleVoiceUrl,
-        };
-        return retObj;
-      } else {
-        const voiceUrl = await this.getTweetVoice.getTweetVoice(
-          voiceTarget,
-          options.isTranslate,
-          options.isMale,
-          tweetLang,
-        );
 
-        const retObj = {
-          tweetText: options.isTranslate ? voiceTarget : tweet.text,
-          createdAt: tweet.created_at,
-          voiceUrl: voiceUrl,
-        };
-        return retObj;
-      }
+      const voiceUrl = await this.getTweetVoice.getTweetVoice(
+        voiceTarget,
+        options.isTranslate,
+        options.isMale,
+        tweetLang,
+      );
+
+      const retObj = {
+        tweetId: tweet.id,
+        tweetText: options.isTranslate ? voiceTarget : tweet.text,
+        createdAt: tweet.created_at,
+        voiceUrl: voiceUrl,
+      };
+      return retObj;
     } catch (e: any) {
       this.logger.error(`Error発生しました ${e.message}`);
       return;
     }
   };
 
-  async run(username: string, options: Toptions) {
+  async run(username: string, options: Toptions, untilId: string) {
     // targetのユーザーのタイムライン(音声化済み)を取得
-    const retArray: (TretArray | TbothRetArray)[] = []; //複数の型を持つ配列の定義方法（ハマる〜）
+    const retArray: TretArray[] = []; //複数の型を持つ配列の定義方法（ハマる〜）
 
-    try {
-      const timeline = await this.getTimeLine.getTimeLine(
-        username,
-        parseInt(process.env.TWITTER_TWEET_MAX_RESULT),
-      );
-
-      for (const tweet of timeline) {
-        retArray.push(await this.textToVoiceObj(tweet, options));
-      }
-      return retArray;
-    } catch (e: any) {
-      throw new HttpException(
-        {
-          statusCode: 515,
-          message: `対象ユーザーのタイムラインの音声化に失敗しました ${e.message}`,
-        },
-        515,
-      );
+    const timeline = await this.getTimeLine.getTimeLine(
+      username,
+      parseInt(process.env.TWITTER_TWEET_MAX_RESULT),
+      untilId,
+    );
+    for (const tweet of timeline.data) {
+      retArray.push(await this.textToVoiceObj(tweet, options));
     }
+    return { tweets: retArray, oldestId: timeline.meta.oldest_id };
   }
 }

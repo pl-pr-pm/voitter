@@ -20,24 +20,36 @@ import { QueryToDto } from '../interface/decorator/query-param.decorator';
 export class CoreController {
   constructor(readonly coreService: CoreService) {}
   @Get()
-  async selectTimeline(@QueryToDto('username') selectTweetDto: SelectTweetDto) {
-    return await this.coreService.selectTimeLine(selectTweetDto, {
-      isTranslate: false,
-      isMale: true,
-      isBoth: false,
-    });
+  async selectTimeline(
+    @QueryToDto('username') selectTweetDto: SelectTweetDto,
+    @Query('untilId') untilId: string,
+  ) {
+    return await this.coreService.selectTimeLine(
+      selectTweetDto,
+      {
+        isTranslate: false,
+        isMale: true,
+        isBoth: false,
+      },
+      untilId,
+    );
   }
   // 翻訳されたタイムラインの取得は、ログインしている必要がある
   @Get('/translate')
   @UseGuards(JwtAuthGuard)
   async selectTranslateTimeline(
     @QueryToDto('username') selectTweetDto: SelectTweetDto,
+    @Query('untilId') untilId: string,
   ) {
-    return await this.coreService.selectTimeLine(selectTweetDto, {
-      isTranslate: true,
-      isMale: true,
-      isBoth: false,
-    });
+    return await this.coreService.selectTimeLine(
+      selectTweetDto,
+      {
+        isTranslate: true,
+        isMale: true,
+        isBoth: false,
+      },
+      untilId,
+    );
   }
 
   // バッチ用
@@ -50,11 +62,17 @@ export class CoreController {
   async createTimeline(@Body() createTimelineDto: CreateTimelineDto) {
     const { username, isTranslate } = createTimelineDto;
     const now = new Date().toISOString();
-    return await this.coreService._createTweet(username, now, {
-      isTranslate: isTranslate,
-      isMale: true,
-      isBoth: false,
-    });
+    const untilId = '0000000000'; // internal用
+    return await this.coreService._createTweet(
+      username,
+      now,
+      {
+        isTranslate: isTranslate,
+        isMale: true,
+        isBoth: false,
+      },
+      untilId,
+    );
   }
 
   // ハウスキーピング用

@@ -23,12 +23,14 @@ export type Toptions = {
 };
 
 export type TretArray = {
+  tweetId: string;
   tweetText: string;
   createdAt: string;
   voiceUrl: string;
 };
 
 export type TbothRetArray = {
+  tweetId: string;
   tweetText: string;
   createdAt: string;
   maleVoiceUrl: string;
