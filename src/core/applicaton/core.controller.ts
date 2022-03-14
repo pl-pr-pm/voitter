@@ -15,6 +15,7 @@ import { UserStatus } from 'src/auth/domain/enum/user-status';
 import { RolesGuard } from 'src/auth/domain/guards/roles.guard';
 import { SelectTweetDto } from '../interface/dto/select-tweet.dto';
 import { QueryToDto } from '../interface/decorator/query-param.decorator';
+import { validationArg } from '../../util/validateArg';
 
 @Controller('timeline')
 export class CoreController {
@@ -24,6 +25,9 @@ export class CoreController {
     @QueryToDto('username') selectTweetDto: SelectTweetDto,
     @Query('untilId') untilId: string,
   ) {
+    // TODO: dtoでvalidationを行うようにする。
+    validationArg('username', selectTweetDto.username);
+    validationArg('untilId', untilId);
     return await this.coreService.selectTimeLine(
       selectTweetDto,
       {
@@ -41,6 +45,9 @@ export class CoreController {
     @QueryToDto('username') selectTweetDto: SelectTweetDto,
     @Query('untilId') untilId: string,
   ) {
+    // TODO: dtoでvalidationを行うようにする。
+    validationArg('username', selectTweetDto.username);
+    validationArg('untilId', untilId);
     return await this.coreService.selectTimeLine(
       selectTweetDto,
       {
@@ -79,7 +86,7 @@ export class CoreController {
   @Delete('/internal')
   @Role(UserStatus.SYSTEM)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async deleteTimeline(@Query('username') username: string) {
-    return await this.coreService._deleteTimeLine({ username: username });
+  async deleteTimeline(@QueryToDto('username') selectTweetDto: SelectTweetDto) {
+    return await this.coreService._deleteTimeLine(selectTweetDto);
   }
 }

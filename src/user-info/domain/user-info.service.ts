@@ -42,8 +42,8 @@ export class UserInfoService {
   async selectUserInfo(selectUserInfoDto: SelectUserInfoDto) {
     const { username } = selectUserInfoDto;
     // usernameをキーとしたデータがキャッシュにあれば、キャッシュのデータを返却
-    const cacheResult = await this.userInfoCache.getCache(username);
-    if (cacheResult) return cacheResult;
+    // const cacheResult = await this.userInfoCache.getCache(username);
+    // if (cacheResult) return cacheResult;
 
     const now = new Date().toISOString();
 
@@ -57,8 +57,8 @@ export class UserInfoService {
     if (!userInfo) {
       // ユーザー情報を作成する
       const userInfo = await this.createUserInfo(username);
-      await this.userInfoCache.deleteCache(username);
-      await this.userInfoCache.setCache(username, userInfo);
+      // await this.userInfoCache.deleteCache(`user-info_${username}`);
+      // await this.userInfoCache.setCache(`user-info_${username}`, userInfo);
       return userInfo;
       // ユーザー情報が取得でき、リクエスト処理日とDBへのタイムライン情報登録日に差がない場合、
       // DBからデータを取得し、リターンする
@@ -67,7 +67,7 @@ export class UserInfoService {
       userInfo.createdAt.substring(0, 10) === now.substring(0, 10)
     ) {
       // キャッシュのttlが切れた場合なので、setCacheのみ実施
-      await this.userInfoCache.setCache(username, userInfo);
+      // await this.userInfoCache.setCache(`user-info_${username}`, userInfo);
       return userInfo;
     } else if (
       userInfo &&
@@ -75,8 +75,8 @@ export class UserInfoService {
     ) {
       await this.deleteUserInfo(username);
       const userInfo = await this.createUserInfo(username);
-      await this.userInfoCache.deleteCache(username);
-      await this.userInfoCache.setCache(username, userInfo);
+      // await this.userInfoCache.deleteCache(`user-info_${username}`);
+      // await this.userInfoCache.setCache(`user-info_${username}`, userInfo);
       return userInfo;
     }
   }
