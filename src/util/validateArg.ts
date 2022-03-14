@@ -56,11 +56,14 @@ export const validationArg = (key: string, target: string) => {
     case 'username':
       const usernamemessage = usernameValidation(target);
       throwBadRequestException(usernamemessage);
+      break;
     case 'password':
       const passwordmessage = passwordValidation(target);
       throwBadRequestException(passwordmessage);
+      break;
     case 'untilId':
       const untilIdmessage = untilIdValidation(target);
       throwBadRequestException(untilIdmessage);
+      break;
   }
 };
