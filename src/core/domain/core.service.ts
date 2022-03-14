@@ -25,8 +25,10 @@ export class CoreService {
       options,
       untilId,
     );
-
     for (const tweet of tweets) {
+      if (!tweet) {
+        continue;
+      }
       query.push({
         insertOne: {
           document: {
@@ -85,7 +87,17 @@ export class CoreService {
     const tweetIdCondition = {
       $lt: untilId,
     };
-
+    const timelineFilter =
+      untilId === '0000000000'
+        ? {
+            username: username,
+            isTranslate: options.isTranslate,
+          }
+        : {
+            username: username,
+            isTranslate: options.isTranslate,
+            tweetId: tweetIdCondition,
+          };
     // usernameをキーとしたデータがキャッシュにあれば、キャッシュのデータを返却
     const cacheResult = await this.coreCache.getCache(cacheKey);
     if (cacheResult) return cacheResult;
@@ -93,12 +105,7 @@ export class CoreService {
     // 後続処理の判定のため、対象ユーザーのデータを一件取得する
     const timelines = await this._selectTweet(
       // 翻訳の有無により、タイムライン情報作成処理の実行有無を判定するため、isTranslateを引数に加える
-      // isTranslate:true のoption の場合であれば、isTranslate:trueの最新作成日を取得する
-      {
-        username: username,
-        isTranslate: options.isTranslate,
-        tweetId: tweetIdCondition,
-      },
+      timelineFilter,
       'createdAt',
       { createdAt: 'desc' },
       1,
@@ -109,32 +116,13 @@ export class CoreService {
       // タイムライン情報を作成する
       await this._createTweet(username, now, options, untilId);
       // タイムライン情報を取得する
-      let timelines;
-      // 初回りクエスト時、untilIdには、'0000000000'が格納される
-      // 初回リクエスト時は、DBに作成された全データを取得するため、filterにltを指定しない
-      if (untilId === '0000000000') {
-        timelines = await this._selectTweet(
-          {
-            username: username,
-            isTranslate: options.isTranslate,
-          },
-          'tweetId username tweetContent',
-          { tweetId: 'desc' },
-          parseInt(process.env.TWEET_MAX_RESULT),
-        );
-        // 初回リクエスト以外
-      } else {
-        timelines = await this._selectTweet(
-          {
-            username: username,
-            isTranslate: options.isTranslate,
-            tweetId: tweetIdCondition,
-          },
-          'tweetId username tweetContent',
-          { tweetId: 'desc' },
-          parseInt(process.env.TWEET_MAX_RESULT),
-        );
-      }
+      const timelines = await this._selectTweet(
+        timelineFilter,
+        'tweetId username tweetContent',
+        { tweetId: 'desc' },
+        parseInt(process.env.TWEET_MAX_RESULT),
+      );
+      // }
       await this.coreCache.deleteCache(cacheKey);
       await this.coreCache.setCache(cacheKey, timelines);
 
@@ -147,11 +135,7 @@ export class CoreService {
       timelines[0]?.createdAt.substring(0, 10) === now.substring(0, 10)
     ) {
       const timelines = await this._selectTweet(
-        {
-          username: username,
-          isTranslate: options.isTranslate,
-          tweetId: tweetIdCondition,
-        },
+        timelineFilter,
         'tweetId username tweetContent',
         { tweetId: 'desc' },
         parseInt(process.env.TWEET_MAX_RESULT),
@@ -167,11 +151,7 @@ export class CoreService {
       await this._deleteTimeLine(selectTweetDto);
       await this._createTweet(username, now, options, untilId);
       const timelines = await this._selectTweet(
-        {
-          username: username,
-          isTranslate: options.isTranslate,
-          tweetId: tweetIdCondition,
-        },
+        timelineFilter,
         'tweetId username tweetContent',
         { tweetId: 'desc' },
         parseInt(process.env.TWEET_MAX_RESULT),
