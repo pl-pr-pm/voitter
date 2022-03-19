@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
-export class SelectTweetDto {
+export class SelectTimelineDto {
   // twitterの仕様上usernameは、4文字以上50文字以下となる
   @IsNotEmpty()
   @MaxLength(50)

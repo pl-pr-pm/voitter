@@ -13,7 +13,7 @@ import { JwtAuthGuard } from '../../auth/domain/guards/jwt-auth.guard';
 import { Role } from 'src/auth/domain/decorators/role.decorator';
 import { UserStatus } from 'src/auth/domain/enum/user-status';
 import { RolesGuard } from 'src/auth/domain/guards/roles.guard';
-import { SelectTweetDto } from '../interface/dto/select-tweet.dto';
+import { SelectTimelineDto } from '../interface/dto/select-timeline.dto';
 import { QueryToDto } from '../interface/decorator/query-param.decorator';
 import { validationArg } from '../../util/validateArg';
 
@@ -22,14 +22,14 @@ export class TimelineController {
   constructor(readonly timelineService: TimelineService) {}
   @Get()
   async selectTimeline(
-    @QueryToDto('username') selectTweetDto: SelectTweetDto,
+    @QueryToDto('username') selectTimelineDto: SelectTimelineDto,
     @Query('untilId') untilId: string,
   ) {
     // TODO: dtoでvalidationを行うようにする。
-    validationArg('username', selectTweetDto.username);
+    validationArg('username', selectTimelineDto.username);
     validationArg('untilId', untilId);
     return await this.timelineService.selectTimeLine(
-      selectTweetDto,
+      selectTimelineDto,
       {
         isTranslate: false,
         isMale: true,
@@ -42,14 +42,14 @@ export class TimelineController {
   @Get('/translate')
   @UseGuards(JwtAuthGuard)
   async selectTranslateTimeline(
-    @QueryToDto('username') selectTweetDto: SelectTweetDto,
+    @QueryToDto('username') selectTimelineDto: SelectTimelineDto,
     @Query('untilId') untilId: string,
   ) {
     // TODO: dtoでvalidationを行うようにする。
-    validationArg('username', selectTweetDto.username);
+    validationArg('username', selectTimelineDto.username);
     validationArg('untilId', untilId);
     return await this.timelineService.selectTimeLine(
-      selectTweetDto,
+      selectTimelineDto,
       {
         isTranslate: true,
         isMale: true,
@@ -86,7 +86,9 @@ export class TimelineController {
   @Delete('/internal')
   @Role(UserStatus.SYSTEM)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async deleteTimeline(@QueryToDto('username') selectTweetDto: SelectTweetDto) {
-    return await this.timelineService._deleteTimeLine(selectTweetDto);
+  async deleteTimeline(
+    @QueryToDto('username') selectTimelineDto: SelectTimelineDto,
+  ) {
+    return await this.timelineService._deleteTimeLine(selectTimelineDto);
   }
 }

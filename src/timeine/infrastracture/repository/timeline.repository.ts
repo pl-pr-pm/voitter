@@ -5,7 +5,7 @@ import { Tweet, TweetDocument } from '../scheme/tweet.scheme';
 import { CreateTweetDto } from '../../interface/dto/create-tweet.dto';
 
 @Injectable()
-export class TweetRepository {
+export class TimelineRepository {
   constructor(
     @InjectModel(Tweet.name) private tweetModel: Model<TweetDocument>,
   ) {}

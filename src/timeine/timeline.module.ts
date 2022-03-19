@@ -3,7 +3,7 @@ import { Tweet, TweetSchema } from './infrastracture/scheme/tweet.scheme';
 import { CacheModule, Module } from '@nestjs/common';
 import { TimelineController } from './applicaton/timeline.controller';
 import { TimelineService } from './domain/timeline.service';
-import { TweetRepository } from './infrastracture/repository/tweet.repository';
+import { TimelineRepository } from './infrastracture/repository/timeline.repository';
 import { GetTweetVoice } from './domain/apis/aws/polly/getTweetVoice';
 import { TranslateTweet } from './domain/apis/deepL/translateTweet';
 import { DetectionLanguage } from './domain/apis/detectionLanguage/detectionLanguage';
@@ -23,7 +23,7 @@ import { UserInfoModule } from 'src/user-info/user-info.module';
   controllers: [TimelineController],
   providers: [
     TimelineService,
-    TweetRepository,
+    TimelineRepository,
     GetTweetVoice,
     GetTimeLine,
     DetectionLanguage,

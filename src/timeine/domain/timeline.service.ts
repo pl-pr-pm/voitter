@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { TextToVoice } from './textToVoice';
-import { TweetRepository } from '../infrastracture/repository/tweet.repository';
-import { SelectTweetDto } from '../interface/dto/select-tweet.dto';
+import { TimelineRepository } from '../infrastracture/repository/timeline.repository';
+import { SelectTimelineDto } from '../interface/dto/select-timeline.dto';
 import { Toptions } from './type/type';
 import { TimelineCache } from '../infrastracture/cache/cache';
 @Injectable()
 export class TimelineService {
   constructor(
-    private tweetRepository: TweetRepository,
+    private timelineRepository: TimelineRepository,
     private textToVoice: TextToVoice,
     private timelineCache: TimelineCache,
   ) {}
@@ -46,7 +46,7 @@ export class TimelineService {
         },
       });
     }
-    await this.tweetRepository.createBulkTweet(query);
+    await this.timelineRepository.createBulkTweet(query);
     return;
   }
 
@@ -55,31 +55,31 @@ export class TimelineService {
   // projections: 取得したい要素
   // sortCondition: sortの条件
   // limitNum: limit件数
-  async _selectTweet(
+  async _selectTimeline(
     filter: any,
     projections: any,
     sortCondition: any,
     limitNum: number,
   ) {
-    return await this.tweetRepository.findByOptions(filter, projections, {
+    return await this.timelineRepository.findByOptions(filter, projections, {
       sort: sortCondition,
       limit: limitNum,
     });
   }
 
   // タイムライン情報を削除する
-  async _deleteTimeLine(selectTweetDto: SelectTweetDto): Promise<void> {
-    await this.tweetRepository.deleteByOptions(selectTweetDto);
+  async _deleteTimeLine(selectTimelineDto: SelectTimelineDto): Promise<void> {
+    await this.timelineRepository.deleteByOptions(selectTimelineDto);
     return;
   }
 
   // タイムライン情報を取得。存在しない場合は、新規作成しDBに登録する
   async selectTimeLine(
-    selectTweetDto: SelectTweetDto,
+    selectTimelineDto: SelectTimelineDto,
     options: Toptions,
     untilId: string,
   ) {
-    const { username } = selectTweetDto;
+    const { username } = selectTimelineDto;
     const cacheKey = `${username}_${options.isTranslate}_${untilId}`;
     const now = new Date().toISOString();
     // tweetIdにおける検索条件
@@ -102,7 +102,7 @@ export class TimelineService {
     if (cacheResult) return cacheResult;
 
     // 後続処理の判定のため、対象ユーザーのデータを一件取得する
-    const timelines = await this._selectTweet(
+    const judgeTimelineCreatedAt = await this._selectTimeline(
       // 翻訳の有無により、タイムライン情報作成処理の実行有無を判定するため、isTranslateを引数に加える
       timelineFilter,
       'createdAt',
@@ -111,11 +111,11 @@ export class TimelineService {
     );
 
     // タイムライン情報が取得できなかった場合
-    if (timelines.length === 0) {
+    if (judgeTimelineCreatedAt.length === 0) {
       // タイムライン情報を作成する
       await this.createTimeline(username, now, options, untilId);
       // タイムライン情報を取得する
-      const timelines = await this._selectTweet(
+      const timeline = await this._selectTimeline(
         timelineFilter,
         'tweetId username tweetContent',
         { tweetId: 'desc' },
@@ -123,41 +123,43 @@ export class TimelineService {
       );
       // }
       await this.timelineCache.deleteCache(cacheKey);
-      await this.timelineCache.setCache(cacheKey, timelines);
+      await this.timelineCache.setCache(cacheKey, timeline);
 
-      return timelines;
+      return timeline;
 
       // タイムライン情報が取得できたが、リクエスト処理日とDBへのタイムライン情報登録日に差がない場合、
       // DBからデータを取得し、リターンする
     } else if (
-      timelines.length !== 0 &&
-      timelines[0]?.createdAt.substring(0, 10) === now.substring(0, 10)
+      judgeTimelineCreatedAt.length !== 0 &&
+      judgeTimelineCreatedAt[0]?.createdAt.substring(0, 10) ===
+        now.substring(0, 10)
     ) {
-      const timelines = await this._selectTweet(
+      const timeline = await this._selectTimeline(
         timelineFilter,
         'tweetId username tweetContent',
         { tweetId: 'desc' },
         parseInt(process.env.TWEET_MAX_RESULT),
       );
       // キャッシュのttlが切れた場合なので、setCacheのみ実施
-      await this.timelineCache.setCache(cacheKey, timelines);
-      return timelines;
+      await this.timelineCache.setCache(cacheKey, timeline);
+      return timeline;
       // リクエスト処理日とDBへのタイムライン情報登録日に差がある場合、タイムライン情報を新規作成し、リターンする
     } else if (
-      timelines.length !== 0 &&
-      timelines[0]?.createdAt.substring(0, 10) !== now.substring(0, 10)
+      judgeTimelineCreatedAt.length !== 0 &&
+      judgeTimelineCreatedAt[0]?.createdAt.substring(0, 10) !==
+        now.substring(0, 10)
     ) {
-      await this._deleteTimeLine(selectTweetDto);
+      await this._deleteTimeLine(selectTimelineDto);
       await this.createTimeline(username, now, options, untilId);
-      const timelines = await this._selectTweet(
+      const timeline = await this._selectTimeline(
         timelineFilter,
         'tweetId username tweetContent',
         { tweetId: 'desc' },
         parseInt(process.env.TWEET_MAX_RESULT),
       );
       await this.timelineCache.deleteCache(cacheKey);
-      await this.timelineCache.setCache(cacheKey, timelines);
-      return timelines;
+      await this.timelineCache.setCache(cacheKey, timeline);
+      return timeline;
     }
   }
 }
