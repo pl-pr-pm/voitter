@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { UserInfoCache } from '../infrastracture/cache/cache';
 import { UserInfoRepository } from '../infrastracture/repository/user-info.repository';
 import { SelectUserInfoDto } from '../interface/dto/select-user-info.dto';
 import { GetUserInfo } from './apis/twitter/getUserInfo';
@@ -7,7 +6,6 @@ import { GetUserInfo } from './apis/twitter/getUserInfo';
 @Injectable()
 export class UserInfoService {
   constructor(
-    private userInfoCache: UserInfoCache,
     private userInfoRepository: UserInfoRepository,
     private getUserInfo: GetUserInfo,
   ) {}
@@ -41,9 +39,6 @@ export class UserInfoService {
   // ユーザー情報を取得。存在しない場合は、新規作成しDBに登録する
   async selectUserInfo(selectUserInfoDto: SelectUserInfoDto) {
     const { username } = selectUserInfoDto;
-    // usernameをキーとしたデータがキャッシュにあれば、キャッシュのデータを返却
-    // const cacheResult = await this.userInfoCache.getCache(username);
-    // if (cacheResult) return cacheResult;
 
     const now = new Date().toISOString();
 
@@ -57,8 +52,6 @@ export class UserInfoService {
     if (!userInfo) {
       // ユーザー情報を作成する
       const userInfo = await this.createUserInfo(username);
-      // await this.userInfoCache.deleteCache(`user-info_${username}`);
-      // await this.userInfoCache.setCache(`user-info_${username}`, userInfo);
       return userInfo;
       // ユーザー情報が取得でき、リクエスト処理日とDBへのタイムライン情報登録日に差がない場合、
       // DBからデータを取得し、リターンする
@@ -66,8 +59,6 @@ export class UserInfoService {
       userInfo &&
       userInfo.createdAt.substring(0, 10) === now.substring(0, 10)
     ) {
-      // キャッシュのttlが切れた場合なので、setCacheのみ実施
-      // await this.userInfoCache.setCache(`user-info_${username}`, userInfo);
       return userInfo;
     } else if (
       userInfo &&
@@ -75,8 +66,6 @@ export class UserInfoService {
     ) {
       await this.deleteUserInfo(username);
       const userInfo = await this.createUserInfo(username);
-      // await this.userInfoCache.deleteCache(`user-info_${username}`);
-      // await this.userInfoCache.setCache(`user-info_${username}`, userInfo);
       return userInfo;
     }
   }
