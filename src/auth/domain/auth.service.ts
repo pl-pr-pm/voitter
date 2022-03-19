@@ -9,6 +9,7 @@ import { CredentialsDto } from '../interface/dto/credentials.dto';
 import * as bcrypt from 'bcrypt';
 import { UserStatus } from './enum/user-status';
 import { S3Upload } from './apis/uploadFileToS3';
+import { HttpException } from '@nestjs/common';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const uuid4 = require('uuid4');
 
@@ -22,19 +23,43 @@ export class AuthService {
 
   // ステータスの付与をユーザー/システムで混合しないようロジックを別にしている
   async userSignUp(credentialsDto: CredentialsDto) {
-    return await this.userRepository.createUser({
-      ...credentialsDto,
-      status: UserStatus.MEMBERS,
-      imageUrl: 'default.png',
-    });
+    try {
+      return await this.userRepository.createUser({
+        ...credentialsDto,
+        status: UserStatus.MEMBERS,
+        imageUrl: 'default.png',
+      });
+    } catch (e: any) {
+      if (e.message?.includes('E11000')) {
+        throw new HttpException(
+          {
+            statusCode: 530,
+            message: `既に登録されているユーザーです。`,
+          },
+          530,
+        );
+      }
+    }
   }
 
   async systemSignUp(credentialsDto: CredentialsDto) {
-    return await this.userRepository.createUser({
-      ...credentialsDto,
-      status: UserStatus.SYSTEM,
-      imageUrl: 'default.png',
-    });
+    try {
+      return await this.userRepository.createUser({
+        ...credentialsDto,
+        status: UserStatus.SYSTEM,
+        imageUrl: 'default.png',
+      });
+    } catch (e: any) {
+      if (e.message?.includes('E11000')) {
+        throw new HttpException(
+          {
+            statusCode: 530,
+            message: `既に登録されているユーザーです。`,
+          },
+          530,
+        );
+      }
+    }
   }
 
   /**

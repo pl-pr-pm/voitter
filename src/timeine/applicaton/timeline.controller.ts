@@ -7,7 +7,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { CoreService } from '../domain/core.service';
+import { TimelineService } from '../domain/timeline.service';
 import { CreateTimelineDto } from '../interface/dto/create-timeline.dto';
 import { JwtAuthGuard } from '../../auth/domain/guards/jwt-auth.guard';
 import { Role } from 'src/auth/domain/decorators/role.decorator';
@@ -18,8 +18,8 @@ import { QueryToDto } from '../interface/decorator/query-param.decorator';
 import { validationArg } from '../../util/validateArg';
 
 @Controller('timeline')
-export class CoreController {
-  constructor(readonly coreService: CoreService) {}
+export class TimelineController {
+  constructor(readonly timelineService: TimelineService) {}
   @Get()
   async selectTimeline(
     @QueryToDto('username') selectTweetDto: SelectTweetDto,
@@ -28,7 +28,7 @@ export class CoreController {
     // TODO: dtoでvalidationを行うようにする。
     validationArg('username', selectTweetDto.username);
     validationArg('untilId', untilId);
-    return await this.coreService.selectTimeLine(
+    return await this.timelineService.selectTimeLine(
       selectTweetDto,
       {
         isTranslate: false,
@@ -48,7 +48,7 @@ export class CoreController {
     // TODO: dtoでvalidationを行うようにする。
     validationArg('username', selectTweetDto.username);
     validationArg('untilId', untilId);
-    return await this.coreService.selectTimeLine(
+    return await this.timelineService.selectTimeLine(
       selectTweetDto,
       {
         isTranslate: true,
@@ -70,7 +70,7 @@ export class CoreController {
     const { username, isTranslate } = createTimelineDto;
     const now = new Date().toISOString();
     const untilId = '0000000000'; // internal用
-    return await this.coreService._createTweet(
+    return await this.timelineService.createTimeline(
       username,
       now,
       {
@@ -87,6 +87,6 @@ export class CoreController {
   @Role(UserStatus.SYSTEM)
   @UseGuards(JwtAuthGuard, RolesGuard)
   async deleteTimeline(@QueryToDto('username') selectTweetDto: SelectTweetDto) {
-    return await this.coreService._deleteTimeLine(selectTweetDto);
+    return await this.timelineService._deleteTimeLine(selectTweetDto);
   }
 }

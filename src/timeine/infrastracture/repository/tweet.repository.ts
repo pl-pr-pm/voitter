@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Tweet, TweetDocument } from '../scheme/tweet.scheme';
-import { CreateTweetDto } from './../../interface/dto/create-tweet.dto';
+import { CreateTweetDto } from '../../interface/dto/create-tweet.dto';
 
 @Injectable()
 export class TweetRepository {

@@ -1,13 +1,13 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 @Injectable()
-export class CoreCache {
+export class TimelineCache {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
   async getCache(key: string) {
     try {
       return await this.cacheManager.get(key);
     } catch (e) {
-      console.log(e.message());
+      console.log(e.message);
     }
   }
 
@@ -15,7 +15,7 @@ export class CoreCache {
     try {
       return await this.cacheManager.set(key, value);
     } catch (e) {
-      console.log(e.message());
+      console.log(e.message);
     }
   }
 
@@ -23,7 +23,7 @@ export class CoreCache {
     try {
       return await this.cacheManager.del(key);
     } catch (e) {
-      console.log(e.message());
+      console.log(e.message);
     }
   }
 }

@@ -1,8 +1,8 @@
 import { MongooseModule } from '@nestjs/mongoose';
 import { Tweet, TweetSchema } from './infrastracture/scheme/tweet.scheme';
 import { CacheModule, Module } from '@nestjs/common';
-import { CoreController } from './applicaton/core.controller';
-import { CoreService } from './domain/core.service';
+import { TimelineController } from './applicaton/timeline.controller';
+import { TimelineService } from './domain/timeline.service';
 import { TweetRepository } from './infrastracture/repository/tweet.repository';
 import { GetTweetVoice } from './domain/apis/aws/polly/getTweetVoice';
 import { TranslateTweet } from './domain/apis/deepL/translateTweet';
@@ -10,7 +10,7 @@ import { DetectionLanguage } from './domain/apis/detectionLanguage/detectionLang
 import { GetTimeLine } from './domain/apis/twitter/getTimeline';
 import { TextToVoice } from './domain/textToVoice';
 import { AuthModule } from 'src/auth/auth.module';
-import { CoreCache } from './infrastracture/cache/cache';
+import { TimelineCache } from './infrastracture/cache/cache';
 import { UserInfoModule } from 'src/user-info/user-info.module';
 
 @Module({
@@ -20,17 +20,17 @@ import { UserInfoModule } from 'src/user-info/user-info.module';
     CacheModule.register({ ttl: 60, max: 10 }),
     UserInfoModule,
   ],
-  controllers: [CoreController],
+  controllers: [TimelineController],
   providers: [
-    CoreService,
+    TimelineService,
     TweetRepository,
     GetTweetVoice,
     GetTimeLine,
     DetectionLanguage,
     TranslateTweet,
     TextToVoice,
-    CoreCache,
+    TimelineCache,
   ],
   exports: [GetTimeLine],
 })
-export class CoreModule {}
+export class TimelineModule {}

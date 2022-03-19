@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common';
-import { CoreModule } from './core/core.module';
+import { TimelineModule } from './timeine/timeline.module';
 import { ConfigModule } from '@nestjs/config';
-// import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UserInfoModule } from './user-info/user-info.module';
 
 @Module({
   imports: [
-    CoreModule,
+    TimelineModule,
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     MongooseModule.forRoot(process.env.DB_URI),
     AuthModule,
