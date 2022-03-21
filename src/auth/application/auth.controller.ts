@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Post,
+  Put,
   Req,
   Res,
   UploadedFile,
@@ -76,7 +78,7 @@ export class AuthController {
    * ユーザーが自身で変更できる情報の更新
    */
   @UseGuards(JwtAuthGuard)
-  @Post('/user')
+  @Put('/user')
   @UseInterceptors(FileInterceptor('img'))
   async updateUser(
     @UploadedFile() file: Express.Multer.File,
@@ -130,7 +132,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/delete')
+  @Delete('/delete')
   async deleteUser(@Req() req: any, @Res() response: Response) {
     const cookie = await this.authService.deleteUser(req.user.username);
     response.setHeader('Set-Cookie', cookie);
