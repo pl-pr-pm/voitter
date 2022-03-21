@@ -20,10 +20,10 @@ export class TranslateTweet {
     } catch (e: any) {
       throw new HttpException(
         {
-          statusCode: 512,
-          message: `音声の生成に失敗しました ${e.message}`,
+          statusCode: 510,
+          message: `音声の翻訳に失敗しました ${e.message}`,
         },
-        512,
+        510,
       );
     }
   };
