@@ -61,7 +61,7 @@ export class TextToVoice {
       parseInt(process.env.TWITTER_TWEET_MAX_RESULT),
       untilId,
     );
-    if (timeline?.length === 0) {
+    if (!timeline.data) {
       throw new HttpException(
         {
           statusCode: 515,
