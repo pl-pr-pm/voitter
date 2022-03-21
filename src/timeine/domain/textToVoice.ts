@@ -61,6 +61,15 @@ export class TextToVoice {
       parseInt(process.env.TWITTER_TWEET_MAX_RESULT),
       untilId,
     );
+    if (timeline?.length === 0) {
+      throw new HttpException(
+        {
+          statusCode: 515,
+          message: `Timelineが存在しません。取得できる期間外の可能性があります。`,
+        },
+        515,
+      );
+    }
     for (const tweet of timeline.data) {
       retArray.push(await this.textToVoiceObj(tweet, options));
     }
