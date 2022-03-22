@@ -27,6 +27,10 @@ import { CredentialsDto } from '../interface/dto/credentials.dto';
  * RefreshTokenが流出した場合、ユーザーのRefreshTokenを削除する
  */
 
+// function readCsrfToken(req) {
+//   return req.csrfToken();
+// }
+
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -46,20 +50,25 @@ export class AuthController {
 
   @Post('/signin')
   async signIn(
+    @Req() request: any,
     @Body() credentialsDto: CredentialsDto,
     @Res() response: Response,
   ) {
     const cookie = await this.authService.signIn(credentialsDto);
+    cookie.push(
+      `_csrf=${request.csrfToken()}; Path=/; HttpOnly; SameSite=None; Secure;`,
+    );
     response.setHeader('Set-Cookie', cookie);
     return response.send(credentialsDto.username);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/signout')
+  @Put('/signout')
   async signOut(@Req() request: any, @Res() response: Response) {
     const username: string = request.user.username;
     await this.authService.signOut(username);
     const cookie = await this.authService.getEmptyCookie();
+
     response.setHeader('Set-Cookie', cookie);
     return response.send();
   }
@@ -70,7 +79,10 @@ export class AuthController {
     const cookie = await this.authService.createCookieWithAccessToken(
       request.user, //JwtRefreshAuthGuard より、requestコンテキストに格納される
     );
-    response.setHeader('Set-Cookie', cookie);
+    response.setHeader(
+      'Set-Cookie',
+      `${cookie} _csrf=${request.csrfToken()}; Path=/;  SameSite=None; Secure;`,
+    );
     return response.send();
   }
 
@@ -118,6 +130,7 @@ export class AuthController {
       response.setHeader('Set-Cookie', [
         cookieWithAccessToken,
         cookieWithRefreshToken,
+        `_csrf=${req.csrfToken()}; Path=/;  SameSite=None; Secure;`,
       ]);
     }
 

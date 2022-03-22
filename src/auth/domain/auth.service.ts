@@ -163,6 +163,7 @@ export class AuthService {
     return [
       'Authentication=; HttpOnly; Path=/; Max-Age=0',
       'AuthneticationRefresh=; HttpOnly; Path=/; Max-Age=0',
+      '_csrf=; HttpOnly; Path=/; Max-Age=0;',
     ];
   }
 
