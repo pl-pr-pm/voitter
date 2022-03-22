@@ -80,7 +80,6 @@ export class AuthService {
    */
   async updateUser(username: string, updateContents: any) {
     let updateVal = {};
-
     if (updateContents.isImageChange) {
       const bucketName = process.env.AVATAR_BUCKET_NAME;
       const imagename = `${uuid4()}.jpg`; //jpg固定

@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Post,
+  Put,
   Req,
   Res,
   UploadedFile,
@@ -77,9 +78,7 @@ export class AuthController {
    * ユーザーが自身で変更できる情報の更新
    */
   @UseGuards(JwtAuthGuard)
-  // 更新系なので、putとしたいが、既にformdataありきの実装となっているため、postで我慢
-  // 余裕があったら実装修正する
-  @Post('/user')
+  @Put('/user')
   @UseInterceptors(FileInterceptor('img'))
   async updateUser(
     @UploadedFile() file: Express.Multer.File,
@@ -90,7 +89,7 @@ export class AuthController {
     const updateContents = {
       username: body.username,
       image: file,
-      isImageChange: body.isImageChange,
+      isImageChange: body.isImageChange === 'true' ? true : false,
     };
 
     // 更新対象としてusernameが存在するかどうか
