@@ -86,15 +86,14 @@ export class AuthController {
     @Body() body: any,
     @Res() response: Response,
   ) {
+    // 更新対象としてusernameが存在するかどうか
+    const updateUsername = body.username ? body.username : req.user.username;
     const updateContents = {
-      username: body.username,
+      username: updateUsername,
+      isUserNameChange: body.username ? true : false,
       image: file,
       isImageChange: body.isImageChange === 'true' ? true : false,
     };
-
-    // 更新対象としてusernameが存在するかどうか
-    const updateUsername = body.username ? body.username : req.user.username;
-
     // Update内容
     const resUpdateContents = await this.authService.updateUser(
       req.user.username,

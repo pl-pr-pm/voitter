@@ -44,11 +44,12 @@ export class AuthService {
 
   async systemSignUp(credentialsDto: CredentialsDto) {
     try {
-      return await this.userRepository.createUser({
+      const user = await this.userRepository.createUser({
         ...credentialsDto,
         status: UserStatus.SYSTEM,
         imageUrl: 'default.png',
       });
+      return user;
     } catch (e: any) {
       if (e.message?.includes('E11000')) {
         throw new HttpException(
@@ -90,18 +91,37 @@ export class AuthService {
         updateContents.image.buffer,
       );
       updateVal = {
-        username: username,
+        username: updateContents.username,
         imageUrl: `https://${bucketName}.s3.ap-northeast-1.amazonaws.com/${imagename}`,
       };
-    } else {
+    } else if (updateContents.isUserNameChange) {
+      const imageUrlArray = await this.userRepository.findByOptions(
+        { username: username },
+        'imageUrl',
+      );
+      const imageUrl = imageUrlArray[0].imageUrl;
+
       updateVal = {
-        username: username,
+        username: updateContents.username,
+        imageUrl: imageUrl,
       };
     }
-    await this.userRepository.updateByOptions(
-      { username: username },
-      { $set: updateVal },
-    );
+    try {
+      await this.userRepository.updateByOptions(
+        { username: username },
+        { $set: updateVal },
+      );
+    } catch (e: any) {
+      if (e.message.includes('E11000')) {
+        throw new HttpException(
+          {
+            statusCode: 530,
+            message: `既に登録されているユーザーです。`,
+          },
+          530,
+        );
+      }
+    }
     return updateVal;
   }
 
