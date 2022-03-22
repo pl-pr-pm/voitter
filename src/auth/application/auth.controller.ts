@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Post,
-  Put,
   Req,
   Res,
   UploadedFile,
@@ -78,7 +77,9 @@ export class AuthController {
    * ユーザーが自身で変更できる情報の更新
    */
   @UseGuards(JwtAuthGuard)
-  @Put('/user')
+  // 更新系なので、putとしたいが、既にformdataありきの実装となっているため、postで我慢
+  // 余裕があったら実装修正する
+  @Post('/user')
   @UseInterceptors(FileInterceptor('img'))
   async updateUser(
     @UploadedFile() file: Express.Multer.File,
