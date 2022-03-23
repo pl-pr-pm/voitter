@@ -20,6 +20,14 @@ import { validationArg } from '../../util/validateArg';
 @Controller('timeline')
 export class TimelineController {
   constructor(readonly timelineService: TimelineService) {}
+
+  /**
+   * Timelineを取得する
+   * 対象のusernameのTimelineがDBに存在しない場合、新規作成する
+   * @param selectTimelineDto
+   * @param untilId
+   * @returns timeline
+   */
   @Get()
   async selectTimeline(
     @QueryToDto('username') selectTimelineDto: SelectTimelineDto,
@@ -38,7 +46,15 @@ export class TimelineController {
       untilId,
     );
   }
-  // 翻訳されたタイムラインの取得は、ログインしている必要がある
+  /**
+   * 翻訳Timelineの取得
+   * 翻訳されたタイムラインの取得は、ログインしている必要がある
+   * 対象のusernameのTimelineがDBに存在しない場合、新規作成する
+   * @param selectTimelineDto
+   * @param untilId
+   * @returns timeline
+   */
+
   @Get('/translate')
   @UseGuards(JwtAuthGuard)
   async selectTranslateTimeline(
@@ -59,10 +75,15 @@ export class TimelineController {
     );
   }
 
-  // バッチ用
-  // 条件なしでタイムライン情報を作成する
-  // フロントからリクエストが行われる、'/timeline @GET' と同様のインターフェースの方が良いかと思ったが、
-  // リソース作成用のエンドポイントなので、GETではなくPOSTとしている
+  /**
+   * バッチ用
+   * 条件なしでタイムライン情報を作成する
+   * フロントからリクエストが行われる、'/timeline @GET' と同様のインターフェースの方が良いかと思ったが、
+   * リソース作成用のエンドポイントなので、GETではなくPOSTとしている
+   * @param createTimelineDto
+   * @returns timeline
+   */
+
   @Post('/internal')
   @Role(UserStatus.SYSTEM)
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -82,7 +103,9 @@ export class TimelineController {
     );
   }
 
-  // ハウスキーピング用
+  /**
+   * ハウスキーピング用
+   */
   @Delete('/internal')
   @Role(UserStatus.SYSTEM)
   @UseGuards(JwtAuthGuard, RolesGuard)

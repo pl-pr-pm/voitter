@@ -50,11 +50,16 @@ export class TimelineService {
     return;
   }
 
-  // 引数によって動的に取得内容を決定する
-  // filter: filter要素
-  // projections: 取得したい要素
-  // sortCondition: sortの条件
-  // limitNum: limit件数
+  /**
+   * 引数によって動的に取得内容を決定する
+   * オブジェクト組み立てのため、用意したメソッド
+   *
+   * @param filter filter要素
+   * @param projections 取得したい要素
+   * @param sortCondition sortの条件
+   * @param limitNum limit件数
+   * @returns timeline
+   */
   async _selectTimeline(
     filter: any,
     projections: any,
@@ -73,7 +78,19 @@ export class TimelineService {
     return;
   }
 
-  // タイムライン情報を取得。存在しない場合は、新規作成しDBに登録する
+  /**
+   * タイムライン情報を取得。存在しない場合は、新規作成しDBに登録する
+   * DBに登録されているタイムラインの作成日とリクエスト処理日の関係によって、処理が分岐する
+   * リクエスト処理日がDBにタイムラインを登録した日と同じ場合、DBからタイムラインを取得し、返却する
+   * リクエスト処理日がDBにタイムラインを登録した日と異なる場合、タイムラインを新規作成する
+   *
+   * (twitter apiから最新のタイムラインを取得した後、それらのtweet idと、DBに保存されているタイムラインのtweet idとの差分を確認し、その差分をtweet apiから取得・処理する方法が考えられるが、今後の実装としたい)
+   *
+   * @param selectTimelineDto
+   * @param options
+   * @param untilId
+   * @returns timeline
+   */
   async selectTimeLine(
     selectTimelineDto: SelectTimelineDto,
     options: Toptions,
@@ -86,6 +103,7 @@ export class TimelineService {
     const tweetIdCondition = {
       $lt: untilId,
     };
+    // timelineを取得するためのフィルター。 untilIdが'0000000000'の場合、新規作成のため、tweetIdを指定しないフィルターとする
     const timelineFilter =
       untilId === '0000000000'
         ? {
@@ -97,11 +115,11 @@ export class TimelineService {
             isTranslate: options.isTranslate,
             tweetId: tweetIdCondition,
           };
-    // usernameをキーとしたデータがキャッシュにあれば、キャッシュのデータを返却
+    // データがキャッシュにあれば、キャッシュのデータを返却
     const cacheResult = await this.timelineCache.getCache(cacheKey);
     if (cacheResult) return cacheResult;
 
-    // 後続処理の判定のため、対象ユーザーのデータを一件取得する
+    // タイムライン情報取得処理の判定のため、対象ユーザーのデータを一件取得する
     const judgeTimelineCreatedAt = await this._selectTimeline(
       // 翻訳の有無により、タイムライン情報作成処理の実行有無を判定するため、isTranslateを引数に加える
       timelineFilter,
@@ -109,7 +127,6 @@ export class TimelineService {
       { createdAt: 'desc' },
       1,
     );
-
     // タイムライン情報が取得できなかった場合
     if (judgeTimelineCreatedAt.length === 0) {
       // タイムライン情報を作成する
@@ -124,7 +141,6 @@ export class TimelineService {
       // }
       await this.timelineCache.deleteCache(cacheKey);
       await this.timelineCache.setCache(cacheKey, timeline);
-
       return timeline;
 
       // タイムライン情報が取得できたが、リクエスト処理日とDBへのタイムライン情報登録日に差がない場合、
@@ -143,6 +159,7 @@ export class TimelineService {
       // キャッシュのttlが切れた場合なので、setCacheのみ実施
       await this.timelineCache.setCache(cacheKey, timeline);
       return timeline;
+
       // リクエスト処理日とDBへのタイムライン情報登録日に差がある場合、タイムライン情報を新規作成し、リターンする
     } else if (
       judgeTimelineCreatedAt.length !== 0 &&

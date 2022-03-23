@@ -21,6 +21,7 @@ export class UserRepository {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+
     return user.save();
   }
 
@@ -35,6 +36,7 @@ export class UserRepository {
     options?: any,
   ): Promise<User[]> {
     const docs = await this.userModel.find(filter, projection, options);
+
     return docs;
   }
 
