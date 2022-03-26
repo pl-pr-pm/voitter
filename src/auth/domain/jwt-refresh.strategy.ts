@@ -1,9 +1,10 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { UserRepository } from '../infrastracture/repository/auth.repository';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
+import { usernameValidation } from 'src/util/validateArg';
 
 // passport における refresh token 用のjwtのストラテジー
 @Injectable()
@@ -28,7 +29,6 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
       secretOrKey: process.env.JWT_REFRESH_SECRET_KEY,
       passReqToCallback: true, // validateメソッドにて、cookieを参照できるようにtrue
     });
-    this.reg = new RegExp(/[!"#$%&'()\*\+\-\.,\/:;<=>?@\[\\\]^_`{|}~]/g);
   }
   async validate(req, payload, _) {
     const { username } = payload;
@@ -36,15 +36,30 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
       // 記号が含まれているか確認
       // 含まれている場合は、UnauthorizedException を実行
       // Guard デコレータ内で呼ばれるため、バリデーションを実施
-      if (!username || this.reg.test(username)) {
-        throw new UnauthorizedException();
+      if (!username || usernameValidation(username)) {
+        throw new HttpException(
+          {
+            statusCode: 521,
+            message: `不適切なusernameです`,
+          },
+          521,
+        );
       }
       const refreshToken = req?.cookies?.AuthneticationRefresh;
       // RefreshトークンがDBに格納されたトークンと比較
-      return this.authService.getUserRefreshToken(username, refreshToken);
-      return;
-    } catch (e) {
-      throw new UnauthorizedException();
+      const decodeUsername = await this.authService.getUserRefreshToken(
+        username,
+        refreshToken,
+      );
+      return decodeUsername;
+    } catch (e: any) {
+      throw new HttpException(
+        {
+          statusCode: 521,
+          message: `不適切なusernameです`,
+        },
+        521,
+      );
     }
   }
 }
