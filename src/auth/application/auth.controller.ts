@@ -27,10 +27,6 @@ import { CredentialsDto } from '../interface/dto/credentials.dto';
  * RefreshTokenが流出した場合、ユーザーのRefreshTokenを削除する
  */
 
-// function readCsrfToken(req) {
-//   return req.csrfToken();
-// }
-
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -38,16 +34,29 @@ export class AuthController {
   // サインアップ用にユーザ/システムと二つ儲けている
   // ユーザーとシステムのサインアップのエンドポイントが一つであると、システム用の権限がユーザーに割り当てられるなど、システム障害を発生させないため
   // また、エンドポイントごとに、アクセス元を絞ったりしやすいように、エンドポイントを分割している
+
+  /**
+   * エンドユーザー情報を登録する
+   */
   @Post('/signup')
   async userSignUp(@Body() credentialsDto: CredentialsDto) {
     return await this.authService.userSignUp(credentialsDto);
   }
-
+  /**
+   * システムユーザー情報を登録する
+   */
   @Post('/system-signup')
   async systemSignUp(@Body() credentialsDto: CredentialsDto) {
     return await this.authService.systemSignUp(credentialsDto);
   }
 
+  /**
+   * ユーザーを認証しトークンを発行する
+   * @param request
+   * @param credentialsDto
+   * @param response
+   * @returns username
+   */
   @Post('/signin')
   async signIn(
     @Req() request: any,
@@ -62,6 +71,11 @@ export class AuthController {
     return response.send(credentialsDto.username);
   }
 
+  /**
+   * 空のトークンを返却する
+   * @param request
+   * @param response
+   */
   @UseGuards(JwtAuthGuard)
   @Put('/signout')
   async signOut(@Req() request: any, @Res() response: Response) {
@@ -73,6 +87,12 @@ export class AuthController {
     return response.send();
   }
 
+  /**
+   * リフレッシュトークンを用いて、アクセストークンを更新する
+   * @param request
+   * @param response
+   * @returns
+   */
   @UseGuards(JwtRefreshAuthGuard)
   @Get('/refresh')
   async refresh(@Req() request: any, @Res() response: Response) {
@@ -87,7 +107,9 @@ export class AuthController {
   }
 
   /**
-   * ユーザーが自身で変更できる情報の更新
+   * ユーザー情報の更新
+   * username/ imageを更新対象とする
+   * usernmaeを更新した場合、トークンを新規発行する
    */
   @UseGuards(JwtAuthGuard)
   @Put('/user')
@@ -133,16 +155,26 @@ export class AuthController {
         `_csrf=${req.csrfToken()}; Path=/;  SameSite=None; Secure;`,
       ]);
     }
-
     return response.send(resUpdateContents);
   }
 
+  /**
+   * ユーザー情報を取得する
+   * @param req
+   * @returns ユーザー情報
+   */
   @UseGuards(JwtAuthGuard)
   @Get('/user')
   async getUser(@Req() req: any) {
     return await this.authService.getUser(req.user.username);
   }
 
+  /**
+   * ユーザー情報を削除する
+   * @param req
+   * @param response
+   * @returns
+   */
   @UseGuards(JwtAuthGuard)
   @Delete('/delete')
   async deleteUser(@Req() req: any, @Res() response: Response) {
