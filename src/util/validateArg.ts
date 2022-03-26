@@ -1,69 +1,31 @@
-import { BadRequestException } from '@nestjs/common';
-const usernameValidation = (username: string) => {
-  if (!username) {
-    return '文字を入力してください';
-  }
+export const usernameValidation = (username: string) => {
   const usernameRegExp = /^[a-zA-Z0-9_]*$/;
-  if (!(username.length >= 4 && username.length <= 50)) {
-    return 'username 長さが不正です。4文字以上50文字以下としてください';
-  }
   if (!username.match(usernameRegExp)) {
-    return 'username 書式が不正です。半角英数字記号としてください。記号は_のみ';
+    return false;
   }
-  return '';
+  return true;
 };
 
-const passwordValidation = (password: string) => {
-  if (!password) {
-    return '文字を入力してください';
+export const voitterUsernameValidation = (username: string) => {
+  const usernameRegExp = /^[a-zA-Z0-9_]*$/;
+  if (!username.match(usernameRegExp)) {
+    return false;
   }
+  return true;
+};
+
+export const passwordValidation = (password: string) => {
   const passwordRegExp = /^[a-zA-Z0-9@#,]*$/;
-  if (!(password.length >= 8 && password.length <= 16)) {
-    return 'password 長さが不正です。8文字以上16文字以下としてください';
-  }
   if (!password.match(passwordRegExp)) {
-    return 'password 書式が不正です。半角英数字記号としてください。記号は@#,のみ。';
+    return false;
   }
-  return '';
+  return true;
 };
 
-const untilIdValidation = (untilId: string) => {
-  if (!untilId) {
-    return '文字を入力してください';
-  }
+export const untilIdValidation = (untilId: string) => {
   const untilIdRegExp = /^[0-9]*$/;
-  if (!(untilId.length >= 10 && untilId.length <= 25)) {
-    return 'untilId 長さが不正です。10文字以上25文字以下としてください';
-  }
   if (!untilId.match(untilIdRegExp)) {
-    return 'untilId 書式が不正です。半角英数字としてください。';
+    return false;
   }
-  return '';
-};
-
-const throwBadRequestException = (message: string) => {
-  if (message) {
-    throw new BadRequestException({
-      statusCode: 400,
-      message: message,
-    });
-  }
-};
-
-export const validationArg = (key: string, target: string) => {
-  if (!target) return '文字を入力してください';
-  switch (key) {
-    case 'username':
-      const usernamemessage = usernameValidation(target);
-      throwBadRequestException(usernamemessage);
-      break;
-    case 'password':
-      const passwordmessage = passwordValidation(target);
-      throwBadRequestException(passwordmessage);
-      break;
-    case 'untilId':
-      const untilIdmessage = untilIdValidation(target);
-      throwBadRequestException(untilIdmessage);
-      break;
-  }
+  return true;
 };

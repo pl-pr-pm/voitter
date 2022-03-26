@@ -15,7 +15,6 @@ import { UserStatus } from 'src/auth/domain/enum/user-status';
 import { RolesGuard } from 'src/auth/domain/guards/roles.guard';
 import { SelectTimelineDto } from '../interface/dto/select-timeline.dto';
 import { QueryToDto } from '../interface/decorator/query-param.decorator';
-import { validationArg } from '../../util/validateArg';
 
 @Controller('timeline')
 export class TimelineController {
@@ -29,22 +28,12 @@ export class TimelineController {
    * @returns timeline
    */
   @Get()
-  async selectTimeline(
-    @QueryToDto('username') selectTimelineDto: SelectTimelineDto,
-    @Query('untilId') untilId: string,
-  ) {
-    // TODO: dtoでvalidationを行うようにする。
-    validationArg('username', selectTimelineDto.username);
-    validationArg('untilId', untilId);
-    return await this.timelineService.selectTimeLine(
-      selectTimelineDto,
-      {
-        isTranslate: false,
-        isMale: true,
-        isBoth: false,
-      },
-      untilId,
-    );
+  async selectTimeline(@Query() selectTimelineDto: SelectTimelineDto) {
+    return await this.timelineService.selectTimeLine(selectTimelineDto, {
+      isTranslate: false,
+      isMale: true,
+      isBoth: false,
+    });
   }
   /**
    * 翻訳Timelineの取得
@@ -57,22 +46,12 @@ export class TimelineController {
 
   @Get('/translate')
   @UseGuards(JwtAuthGuard)
-  async selectTranslateTimeline(
-    @QueryToDto('username') selectTimelineDto: SelectTimelineDto,
-    @Query('untilId') untilId: string,
-  ) {
-    // TODO: dtoでvalidationを行うようにする。
-    validationArg('username', selectTimelineDto.username);
-    validationArg('untilId', untilId);
-    return await this.timelineService.selectTimeLine(
-      selectTimelineDto,
-      {
-        isTranslate: true,
-        isMale: true,
-        isBoth: false,
-      },
-      untilId,
-    );
+  async selectTranslateTimeline(@Query() selectTimelineDto: SelectTimelineDto) {
+    return await this.timelineService.selectTimeLine(selectTimelineDto, {
+      isTranslate: true,
+      isMale: true,
+      isBoth: false,
+    });
   }
 
   /**

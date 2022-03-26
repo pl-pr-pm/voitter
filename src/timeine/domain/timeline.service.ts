@@ -94,9 +94,8 @@ export class TimelineService {
   async selectTimeLine(
     selectTimelineDto: SelectTimelineDto,
     options: Toptions,
-    untilId: string,
   ) {
-    const { username } = selectTimelineDto;
+    const { username, untilId } = selectTimelineDto;
     const cacheKey = `${username}_${options.isTranslate}_${untilId}`;
     const now = new Date().toISOString();
     // tweetIdにおける検索条件

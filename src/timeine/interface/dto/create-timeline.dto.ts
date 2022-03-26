@@ -1,17 +1,20 @@
 import {
   IsNotEmpty,
-  IsNumberString,
   MaxLength,
   MinLength,
   IsBoolean,
+  IsString,
+  Validate,
 } from 'class-validator';
+import { UsernameFormat } from '../validate/select-timeline.validate';
 
 export class CreateTimelineDto {
   // twitterの仕様上usernameは、4文字以上50文字以下となる
   @IsNotEmpty()
   @MaxLength(50)
   @MinLength(4)
-  @IsNumberString()
+  @IsString()
+  @Validate(UsernameFormat)
   username: string;
 
   @IsNotEmpty()
