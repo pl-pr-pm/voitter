@@ -4,7 +4,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { UserRepository } from '../infrastracture/repository/auth.repository';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
-import { usernameValidation } from 'src/util/validateArg';
+import { voitterUsernameValidation } from 'src/util/validateArg';
 
 // passport における refresh token 用のjwtのストラテジー
 @Injectable()
@@ -36,7 +36,7 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
       // 記号が含まれているか確認
       // 含まれている場合は、UnauthorizedException を実行
       // Guard デコレータ内で呼ばれるため、バリデーションを実施
-      if (!username || usernameValidation(username)) {
+      if (!username || !voitterUsernameValidation(username)) {
         throw new HttpException(
           {
             statusCode: 521,
