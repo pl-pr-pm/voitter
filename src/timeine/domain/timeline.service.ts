@@ -80,11 +80,6 @@ export class TimelineService {
 
   /**
    * タイムライン情報を取得。存在しない場合は、新規作成しDBに登録する
-   * DBに登録されているタイムラインの作成日とリクエスト処理日の関係によって、処理が分岐する
-   * リクエスト処理日がDBにタイムラインを登録した日と同じ場合、DBからタイムラインを取得し、返却する
-   * リクエスト処理日がDBにタイムラインを登録した日と異なる場合、タイムラインを新規作成する
-   *
-   * (twitter apiから最新のタイムラインを取得した後、それらのtweet idと、DBに保存されているタイムラインのtweet idとの差分を確認し、その差分をtweet apiから取得・処理する方法が考えられるが、今後の実装としたい)
    *
    * @param selectTimelineDto
    * @param options
@@ -142,13 +137,8 @@ export class TimelineService {
       await this.timelineCache.setCache(cacheKey, timeline);
       return timeline;
 
-      // タイムライン情報が取得できたが、リクエスト処理日とDBへのタイムライン情報登録日に差がない場合、
-      // DBからデータを取得し、リターンする
-    } else if (
-      judgeTimelineCreatedAt.length !== 0 &&
-      judgeTimelineCreatedAt[0]?.createdAt.substring(0, 10) ===
-        now.substring(0, 10)
-    ) {
+      // タイムライン情報が取得できた場合、DBからデータを取得し、リターンする
+    } else {
       const timeline = await this._selectTimeline(
         timelineFilter,
         'tweetId username tweetContent',
@@ -156,24 +146,6 @@ export class TimelineService {
         parseInt(process.env.TWEET_MAX_RESULT),
       );
       // キャッシュのttlが切れた場合なので、setCacheのみ実施
-      await this.timelineCache.setCache(cacheKey, timeline);
-      return timeline;
-
-      // リクエスト処理日とDBへのタイムライン情報登録日に差がある場合、タイムライン情報を新規作成し、リターンする
-    } else if (
-      judgeTimelineCreatedAt.length !== 0 &&
-      judgeTimelineCreatedAt[0]?.createdAt.substring(0, 10) !==
-        now.substring(0, 10)
-    ) {
-      await this._deleteTimeLine(selectTimelineDto);
-      await this.createTimeline(username, now, options, untilId);
-      const timeline = await this._selectTimeline(
-        timelineFilter,
-        'tweetId username tweetContent',
-        { tweetId: 'desc' },
-        parseInt(process.env.TWEET_MAX_RESULT),
-      );
-      await this.timelineCache.deleteCache(cacheKey);
       await this.timelineCache.setCache(cacheKey, timeline);
       return timeline;
     }
